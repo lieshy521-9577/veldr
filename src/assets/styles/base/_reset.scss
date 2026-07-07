@@ -1,0 +1,155 @@
+// Reset and normalize styles
+@use 'sass:color';
+@use '../variables' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// Set up base font and text rendering
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-size: 16px;
+}
+
+// Base body styles
+body {
+  background-color: $bg-color;
+  color: $text-color;
+  font-family: $font-family-sans-serif;
+  line-height: $line-height-base;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+// Base typography
+h1, h2, h3, h4, h5, h6 {
+  font-weight: $font-weight-semibold;
+  color: $heading-color;
+  line-height: $line-height-sm;
+  margin-bottom: 0.5rem;
+}
+
+h1 { 
+  font-size: 2.25rem; // 36px
+  @media (min-width: 768px) {
+    font-size: 3rem; // 48px
+  }
+}
+
+h2 { 
+  font-size: 1.875rem; // 30px
+  @media (min-width: 768px) {
+    font-size: 2.25rem; // 36px
+  }
+}
+
+h3 { 
+  font-size: 1.5rem; // 24px
+  @media (min-width: 768px) {
+    font-size: 1.875rem; // 30px
+  }
+}
+
+h4 { 
+  font-size: 1.25rem; // 20px
+  @media (min-width: 768px) {
+    font-size: 1.5rem; // 24px
+  }
+}
+
+h5 { 
+  font-size: 1.125rem; // 18px
+}
+
+h6 { 
+  font-size: 1rem; // 16px
+}
+
+// Links
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-base;
+  
+  &:hover {
+    color: color.adjust($primary-color, $lightness: -10%);
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+// Forms
+input, textarea, select, button {
+  border-radius: $border-radius;
+  border: $input-border-width solid $input-border-color;
+  outline: none;
+  transition: box-shadow $transition-base, border-color $transition-base;
+  
+  &:focus {
+    border-color: $input-focus-border-color;
+    box-shadow: $input-focus-box-shadow;
+  }
+  
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Button base styles
+button, .btn {
+  padding: $btn-padding-y $btn-padding-x;
+  border-radius: $btn-border-radius;
+  font-weight: $font-weight-medium;
+  transition: $btn-transition;
+  cursor: pointer;
+  border: $btn-border-width solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  
+  &.btn-primary {
+    background-color: $primary-color;
+    color: $white;
+    border-color: $primary-color;
+    
+    &:hover:not(:disabled) {
+      background-color: color.adjust($primary-color, $lightness: -10%);
+      border-color: color.adjust($primary-color, $lightness: -10%);
+    }
+  }
+  
+  &.btn-secondary {
+    background-color: $gray-200;
+    color: $gray-800;
+    border-color: $gray-300;
+    
+    &:hover:not(:disabled) {
+      background-color: $gray-300;
+    }
+  }
+  
+  &.btn-danger {
+    background-color: $danger-color;
+    color: $white;
+    border-color: $danger-color;
+    
+    &:hover:not(:disabled) {
+      background-color: color.adjust($danger-color, $lightness: -10%);
+      border-color: color.adjust($danger-color, $lightness: -10%);
+    }
+  }
+}

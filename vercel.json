@@ -1,0 +1,39 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "package.json",
+        "use": "@vercel/static-build",
+        "config": {
+          "distDir": "dist",
+          "outputDirectory": "dist"
+        }
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "http://43.133.91.197:5000/api/$1"
+      },
+      {
+        "src": "/uploads/(.*)",
+        "dest": "http://43.133.91.197:5000/uploads/$1"
+      },
+      {
+        "src": "/assets/(.*)",
+        "headers": {
+          "Cache-Control": "public, max-age=31536000, immutable"
+        }
+      },
+      {
+        "src": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp))",
+        "headers": {
+          "Cache-Control": "public, max-age=31536000, immutable"
+        }
+      },
+      {
+        "src": "/(.*)",
+        "dest": "/index.html"
+      }
+    ]
+  }

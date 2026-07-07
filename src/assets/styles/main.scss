@@ -1,0 +1,48 @@
+// 1. Configuration and helpers
+@use 'sass:color';
+@use 'sass:map';
+@use 'sass:string';
+@use 'variables' as *;
+
+// 2. Base styles
+@use 'base/reset';
+@use 'base/typography';
+
+// 3. Layout components
+@use 'layouts/grid';
+@use 'layouts/header';
+@use 'layouts/footer';
+@use 'layouts/sidebar';
+
+// 4. UI Components
+@use 'components/buttons';
+@use 'components/forms';
+@use 'components/cards';
+@use 'components/tables';
+@use 'components/modals';
+@use 'components/alerts';
+@use 'components/article-content';
+
+// 5. Page-specific styles
+@use 'pages/dashboard';
+@use 'pages/article';
+
+// 6. Theme styles
+@use 'themes/default';
+
+// 7. Utilities & Helpers
+@use 'utilities/helpers';
+
+// 全局样式覆盖和补充
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// 如果需要所有元素都使用 fit-content 宽度
+* {
+//   width: fit-content;
+}

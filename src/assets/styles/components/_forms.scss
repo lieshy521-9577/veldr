@@ -1,0 +1,145 @@
+// Form container
+@use 'sass:color';
+@use '../variables' as *;
+
+.form-container {
+  max-width: 56rem; // 4xl
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $box-shadow;
+}
+
+// Form group
+.form-group {
+  margin-bottom: 1.5rem;
+  
+  &-label {
+    display: block;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $gray-700;
+    margin-bottom: 0.25rem;
+    
+    &-required::after {
+      color: $danger-color;
+      margin-left: 0.25rem;
+      content: '*';
+    }
+  }
+  
+  &-help {
+    margin-top: 0.25rem;
+    font-size: $font-size-sm;
+    color: $text-muted;
+  }
+  
+  &-error {
+    margin-top: 0.25rem;
+    font-size: $font-size-sm;
+    color: $danger-color;
+  }
+}
+
+// Form controls
+.form-control {
+  display: block;
+  width: 100%;
+  border-radius: $border-radius;
+  border: $input-border-width solid $input-border-color;
+  box-shadow: $box-shadow;
+  font-size: $font-size-sm;
+  transition: border-color $transition-base, box-shadow $transition-base;
+  
+  &[readonly] {
+    @apply bg-gray-100 cursor-not-allowed;
+  }
+  
+  &-sm {
+    @apply px-2 py-1 text-sm;
+  }
+  
+  &-lg {
+    @apply px-4 py-3 text-base;
+  }
+  
+  // Input, textarea, select
+  &-input,
+  &-textarea,
+  &-select {
+    @apply form-control;
+    
+    &:disabled {
+      @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+    }
+  }
+  
+  // Checkbox and radio
+  &-checkbox,
+  &-radio {
+    @apply h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded;
+    
+    &:disabled {
+      @apply bg-gray-100 text-gray-400 cursor-not-allowed;
+    }
+  }
+  
+  // File input
+  &-file {
+    @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100;
+  }
+  
+  // Range input
+  &-range {
+    @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
+    
+    &::-webkit-slider-thumb {
+      @apply appearance-none w-5 h-5 rounded-full bg-blue-600 cursor-pointer;
+    }
+    
+    &::-moz-range-thumb {
+      @apply w-5 h-5 rounded-full bg-blue-600 cursor-pointer border-none;
+    }
+  }
+}
+
+// Form validation states
+.is-valid {
+  @apply border-green-500 focus:ring-green-500 focus:border-green-500;
+}
+
+.is-invalid {
+  @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+}
+
+// Form inline
+.form-inline {
+  @apply flex items-center space-x-4;
+  
+  .form-group {
+    @apply mb-0 flex-1;
+  }
+}
+
+// Form actions
+.form-actions {
+  @apply mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-3;
+}
+
+// Custom form controls
+.custom-control {
+  @apply relative flex items-start;
+  
+  &-input {
+    @apply h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1;
+  }
+  
+  &-label {
+    @apply ml-2 block text-sm text-gray-700;
+  }
+  
+  &-description {
+    @apply ml-6 text-sm text-gray-500;
+  }
+}

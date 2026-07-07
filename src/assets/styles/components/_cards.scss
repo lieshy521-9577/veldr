@@ -1,0 +1,152 @@
+// Base card styles
+.card {
+  @apply bg-white rounded-lg shadow overflow-hidden transition-all duration-200;
+  
+  // Card variants
+  &-default {
+    @apply border border-gray-200;
+  }
+  
+  &-primary {
+    @apply border-l-4 border-blue-500;
+  }
+  
+  &-success {
+    @apply border-l-4 border-green-500;
+  }
+  
+  &-warning {
+    @apply border-l-4 border-yellow-500;
+  }
+  
+  &-danger {
+    @apply border-l-4 border-red-500;
+  }
+  
+  // Card header
+  &-header {
+    @apply px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between;
+    
+    &-title {
+      @apply text-lg font-medium text-gray-900;
+    }
+    
+    &-actions {
+      @apply flex items-center space-x-2;
+    }
+  }
+  
+  // Card body
+  &-body {
+    @apply p-4;
+    
+    &-padded {
+      @apply p-6;
+    }
+  }
+  
+  // Card footer
+  &-footer {
+    @apply px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between;
+    
+    &-left {
+      @apply flex items-center space-x-2;
+    }
+    
+    &-right {
+      @apply flex items-center space-x-2;
+    }
+  }
+  
+  // Card with hover effect
+  &-hoverable {
+    @apply hover:shadow-md transition-shadow duration-200;
+  }
+  
+  // Card with image
+  &-img {
+    @apply w-full h-48 object-cover;
+    
+    &-top {
+      @apply w-full h-48 object-cover;
+    }
+    
+    &-bottom {
+      @apply w-full h-48 object-cover mt-auto;
+    }
+  }
+  
+  // Card title
+  &-title {
+    @apply text-xl font-semibold text-gray-900 mb-2;
+  }
+  
+  // Card subtitle
+  &-subtitle {
+    @apply text-sm font-medium text-gray-500 mb-2;
+  }
+  
+  // Card text
+  &-text {
+    @apply text-gray-700 mb-4;
+  }
+  
+  // Card links
+  &-link {
+    @apply text-blue-600 hover:text-blue-800 font-medium;
+  }
+  
+  // Card stats
+  &-stats {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+    
+    .stat {
+      @apply p-4 bg-gray-50 rounded-lg;
+      
+      &-label {
+        @apply text-xs font-medium text-gray-500 uppercase tracking-wider;
+      }
+      
+      &-value {
+        @apply mt-1 text-2xl font-semibold text-gray-900;
+      }
+      
+      &-change {
+        @apply mt-1 text-sm;
+        
+        &.positive {
+          @apply text-green-600;
+        }
+        
+        &.negative {
+          @apply text-red-600;
+        }
+      }
+    }
+  }
+  
+  // Card table
+  &-table {
+    @apply min-w-full divide-y divide-gray-200;
+    
+    thead {
+      @apply bg-gray-50;
+      
+      th {
+        @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+      }
+    }
+    
+    tbody {
+      @apply bg-white divide-y divide-gray-200;
+      
+      tr {
+        @apply hover:bg-gray-50;
+      }
+      
+      td {
+        @apply px-4 py-3 text-sm text-gray-900;
+      }
+    }
+  }
+}

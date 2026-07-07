@@ -1,0 +1,136 @@
+// Table component styles
+.table {
+  @apply min-w-full divide-y divide-gray-200;
+  
+  &-container {
+    @apply overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg;
+  }
+  
+  &-wrapper {
+    @apply overflow-x-auto;
+  }
+  
+  thead {
+    @apply bg-gray-50;
+    
+    th {
+      @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+      
+      &.sortable {
+        @apply cursor-pointer hover:bg-gray-100 transition-colors duration-200;
+        
+        &.asc::after {
+          content: ' ↑';
+          @apply text-primary-600;
+        }
+        
+        &.desc::after {
+          content: ' ↓';
+          @apply text-primary-600;
+        }
+      }
+    }
+  }
+  
+  tbody {
+    @apply bg-white divide-y divide-gray-200;
+    
+    tr {
+      @apply hover:bg-gray-50 transition-colors duration-200;
+      
+      &.selected {
+        @apply bg-primary-50;
+      }
+    }
+    
+    td {
+      @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+      
+      &.actions {
+        @apply text-right font-medium;
+      }
+    }
+  }
+  
+  // Table variants
+  &-striped {
+    tbody tr:nth-child(even) {
+      @apply bg-gray-50;
+    }
+  }
+  
+  &-bordered {
+    @apply border border-gray-200;
+    
+    th, td {
+      @apply border border-gray-200;
+    }
+  }
+  
+  &-compact {
+    th, td {
+      @apply px-3 py-2;
+    }
+  }
+  
+  &-hover {
+    tbody tr:hover {
+      @apply bg-gray-100;
+    }
+  }
+}
+
+// Table pagination
+.table-pagination {
+  @apply flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200;
+  
+  &-info {
+    @apply text-sm text-gray-700;
+  }
+  
+  &-controls {
+    @apply flex items-center space-x-2;
+  }
+  
+  &-button {
+    @apply relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed;
+    
+    &.active {
+      @apply text-primary-600 bg-primary-50 border-primary-500;
+    }
+  }
+  
+  &-prev,
+  &-next {
+    @apply table-pagination-button;
+  }
+  
+  &-numbers {
+    @apply flex space-x-1;
+  }
+}
+
+// Table filters
+.table-filters {
+  @apply bg-white px-6 py-4 border-b border-gray-200;
+  
+  &-row {
+    @apply flex flex-wrap items-center gap-4;
+  }
+  
+  &-group {
+    @apply flex items-center space-x-2;
+    
+    &-label {
+      @apply text-sm font-medium text-gray-700;
+    }
+  }
+  
+  &-search {
+    @apply flex-1 max-w-md;
+  }
+  
+  &-actions {
+    @apply flex items-center space-x-2;
+  }
+}

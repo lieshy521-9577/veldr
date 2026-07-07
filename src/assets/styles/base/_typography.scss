@@ -1,0 +1,124 @@
+// Typography system
+@use 'sass:color';
+@use '../variables' as *;
+
+// Typography mixins
+@mixin text-size($size, $responsive: true) {
+  @if $size == 'xs' {
+    font-size: 0.75rem; // 12px
+    line-height: 1.25;
+  } @else if $size == 'sm' {
+    font-size: 0.875rem; // 14px
+    line-height: 1.5;
+  } @else if $size == 'base' {
+    font-size: 1rem; // 16px
+    line-height: 1.5;
+  } @else if $size == 'lg' {
+    font-size: 1.125rem; // 18px
+    line-height: 1.5;
+  } @else if $size == 'xl' {
+    font-size: 1.25rem; // 20px
+    line-height: 1.5;
+  } @else if $size == '2xl' {
+    font-size: 1.5rem; // 24px
+    line-height: 1.25;
+    @if $responsive {
+      @media (min-width: 768px) {
+        font-size: 1.875rem; // 30px
+      }
+    }
+  } @else if $size == '3xl' {
+    font-size: 1.875rem; // 30px
+    line-height: 1.25;
+    @if $responsive {
+      @media (min-width: 768px) {
+        font-size: 2.25rem; // 36px
+      }
+    }
+  } @else if $size == '4xl' {
+    font-size: 2.25rem; // 36px
+    line-height: 1.25;
+    @if $responsive {
+      @media (min-width: 768px) {
+        font-size: 3rem; // 48px
+      }
+    }
+  } @else if $size == '5xl' {
+    font-size: 3rem; // 48px
+    line-height: 1.25;
+    @if $responsive {
+      @media (min-width: 768px) {
+        font-size: 3.75rem; // 60px
+      }
+    }
+  } @else if $size == '6xl' {
+    font-size: 3.75rem; // 60px
+    line-height: 1.25;
+    @if $responsive {
+      @media (min-width: 768px) {
+        font-size: 4.5rem; // 72px
+      }
+    }
+  }
+}
+
+// Typography utility classes
+.text-xs { @include text-size('xs'); }
+.text-sm { @include text-size('sm'); }
+.text-base { @include text-size('base'); }
+.text-lg { @include text-size('lg'); }
+.text-xl { @include text-size('xl'); }
+.text-2xl { @include text-size('2xl'); }
+.text-3xl { @include text-size('3xl'); }
+.text-4xl { @include text-size('4xl'); }
+.text-5xl { @include text-size('5xl'); }
+.text-6xl { @include text-size('6xl'); }
+
+// Font weights
+.font-light { font-weight: $font-weight-light; }
+.font-normal { font-weight: $font-weight-normal; }
+.font-medium { font-weight: $font-weight-medium; }
+.font-semibold { font-weight: $font-weight-semibold; }
+.font-bold { font-weight: $font-weight-bold; }
+
+// Text colors
+.text-primary { color: $primary-color; }
+.text-secondary { color: $secondary-color; }
+.text-success { color: $success-color; }
+.text-danger { color: $danger-color; }
+.text-warning { color: $warning-color; }
+.text-info { color: $info-color; }
+.text-muted { color: $text-muted; }
+
+// Line heights
+.leading-none { line-height: 1; }
+.leading-tight { line-height: 1.25; }
+.leading-snug { line-height: 1.375; }
+.leading-normal { line-height: 1.5; }
+.leading-relaxed { line-height: 1.625; }
+.leading-loose { line-height: 2; }
+
+// Letter spacing
+.tracking-tighter { letter-spacing: -0.05em; }
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-normal { letter-spacing: 0; }
+.tracking-wide { letter-spacing: 0.025em; }
+.tracking-wider { letter-spacing: 0.05em; }
+.tracking-widest { letter-spacing: 0.1em; }
+
+// Text alignment
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+// Text decoration
+.underline { text-decoration: underline; }
+.no-underline { text-decoration: none; }
+.line-through { text-decoration: line-through; }
+
+// Text transform
+.uppercase { text-transform: uppercase; }
+.lowercase { text-transform: lowercase; }
+.capitalize { text-transform: capitalize; }
+.normal-case { text-transform: none; }
