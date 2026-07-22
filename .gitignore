@@ -1,2 +1,23 @@
-.vercel
-.env*
+# Dependencies and generated frontend assets
+**/node_modules/
+frontend/dist/
+frontend/.vercel/
+
+# Runtime state and user-generated media
+backend/temp/
+backend/public/uploads/
+backend/public/backups/
+backend/public/data/*.sqlite
+backend/public/data/*.json
+public/data/*.sqlite
+public/data/*.json
+
+# Deployment archives and local environment settings
+backend/public.zip
+**/.env
+**/.env.*
+!**/.env.example
+
+# OS/editor files
+.DS_Store
+Thumbs.db

@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => {
   
   // 根据环境确定前端端口
   const frontendPort = env.VITE_FRONTEND_PORT || 5173;
+  const apiBaseUrl = env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const uploadBaseUrl = env.VITE_UPLOAD_BASE_URL || 'http://localhost:5000/uploads';
   
   return {
     plugins: [
@@ -33,12 +35,12 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0', // 允许外部访问
       proxy: {
         '/api': {
-          target: env.VITE_API_BASE_URL.replace('/api', ''),
+          target: apiBaseUrl.replace('/api', ''),
           changeOrigin: true,
           secure: false,
         },
         '/uploads': {
-          target: env.VITE_UPLOAD_BASE_URL.replace('/uploads', ''),
+          target: uploadBaseUrl.replace('/uploads', ''),
           changeOrigin: true,
           secure: false,
         },

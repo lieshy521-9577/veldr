@@ -1,0 +1,56 @@
+[Unit]
+Description=CMS Backend Service
+Documentation=https://github.com/your-org/cms
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/cms/backend
+PermissionsStartOnly=true
+ExecStartPre=/bin/mkdir -p /opt/cms/backend/{public/uploads,temp}
+ExecStartPre=/bin/chown -R www-data:www-data /opt/cms/backend
+ExecStartPre=/bin/chmod -R 755 /opt/cms/backend/public/uploads
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=cms-backend
+
+# 环境变量
+Environment=NODE_ENV=production
+Environment=PORT=5000
+
+# 安全设置
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/cms/backend/public/data
+ReadWritePaths=/opt/cms/backend/public/uploads
+ReadWritePaths=/opt/cms/backend/temp
+
+# 资源限制
+LimitNOFILE=65536
+MemoryMax=512M
+
+# 高级安全隔离
+CapabilityBoundingSet=
+DeviceAllow=
+LockPersonality=true
+PrivateDevices=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
