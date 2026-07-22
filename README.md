@@ -1,86 +1,126 @@
-- ## 后端服务器处理
-- 直接运行测试
-  - 该后端服务器需上传package.json并安装
-  - 开放防火墙端口
-  - ~~curl http://8.159.128.180:5000/api/articles?page=1&limit=6&status=published无法访问~~
-  - ~~curl http://127.0.0.1:5000/api/articles?page=1&limit=6&status=published可以访问~~
-  - 搞错服务器ip了
-  - 
-- service文件运行测试
-  - service存储路径
-  - /etc/systemd/system
-- 后续上传
-  - 数据库只读||用户、权限问题
-    - sudo chown -R lighthouse:lighthouse /opt/cms/backend/public/data/
-  - sudo journalctl -u cms-backend -f实时日志
+# Veldr
 
-```
-# 创建项目目录结构（如果不存在）
-sudo mkdir -p /opt/cms/backend/{public/uploads,temp}
+Veldr is a personal note writing system with a Vue/Vite frontend and an Express + SQLite backend.
 
-# 设置所有权给 www-data
-sudo chown -R www-data:www-data /opt/cms/backend
+This repository has been reorganized as a full-stack project. It is intended for private writing, image-heavy notes, drafts, and personal article management.
 
-# 设置目录权限（允许读写）
-sudo chmod -R 755 /opt/cms/backend/public/uploads
-sudo chmod -R 755 /opt/cms/backend/temp
+## Current Positioning
 
-sudo nano /etc/systemd/system/cms-backend.service
-# 重新加载 systemd
-sudo systemctl daemon-reload
+- Use Veldr for personal notes and longer writing.
+- New articles default to private.
+- Chinese titles are supported without requiring a URL slug.
+- `Slug` is optional. Leave it empty for personal notes; use it only when an English URL identifier is useful.
+- Uploaded images and SQLite runtime data stay local and are ignored by Git.
 
-# 启动服务
-sudo systemctl start cms-backend
+## Project Structure
 
-# 设置开机自启
-sudo systemctl enable cms-backend
-
-# 检查状态
-sudo systemctl status cms-backend
-# 实时查看日志
-sudo journalctl -u cms-backend -f
-
-# 查看最近50条日志
-sudo journalctl -u cms-backend -n 50 --no-pager
-
-
-rm -rf node_modules package-lock.json
+```text
+veldr/
+├─ backend/              # Express API, SQLite data, uploads, cleanup scripts
+├─ frontend/             # Vue 3 + Vite admin and reader UI
+├─ public/               # Legacy/static assets kept from the original project
+├─ .gitignore
+└─ README.md
 ```
 
-- ### 前端
+## Local Development
 
-```
-      // headers: {
-      //   'Content-Type': 'application/javascript'
-      // },
-错误vite配置
+Start the backend:
 
-
-
-    listen 8031;
-    server_name 8.159.128.180;
-  
-    # 根目录
-    root /var/www/dist;
-    index index.html;
-  
-    # API请求转发到后端
-    location /api/ {
-        proxy_pass http://cms_backend;
-        proxy_set_header Host 43.133.91.197:5000;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-  
-    # 上传文件请求转发
-    location /uploads/ {
-        proxy_pass http://cms_backend;
-        proxy_set_header Host 43.133.91.197:5000;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
+```bash
+cd backend
+npm install
+npm start
 ```
 
-#� �C�M�S�
-�
-�
+Backend default URL:
+
+```text
+http://127.0.0.1:5000/api
+http://127.0.0.1:5000/api/health
+```
+
+Start the frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend default URL:
+
+```text
+http://127.0.0.1:5173
+```
+
+## Environment
+
+Backend:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PORT` | `5000` | Backend listening port |
+| `DB_DIALECT` | `sqlite` | Database dialect |
+| `DB_STORAGE` | `public/data/cms.sqlite` | Main SQLite database |
+| `DB_LOGGING` | `false` | Sequelize query logging |
+| `DEFAULT_PASSWORD` | `123456` | Initial password value when no security DB exists |
+
+Frontend:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VITE_FRONTEND_PORT` | `5173` | Vite dev server port |
+| `VITE_API_BASE_URL` | `http://localhost:5000/api` | API base URL |
+| `VITE_UPLOAD_BASE_URL` | `http://localhost:5000/uploads` | Upload file base URL |
+
+## Password Notes
+
+Do not commit real local passwords. Runtime password data is stored in:
+
+```text
+backend/public/data/security.sqlite
+```
+
+The checked-in README documents how the password system works, but not any private local password currently in use.
+
+## Data And Cleanup
+
+Runtime files are intentionally ignored by Git:
+
+- `backend/public/data/*.sqlite`
+- `backend/public/uploads/`
+- `backend/public/backups/`
+- `backend/temp/`
+
+To preview unused image cleanup:
+
+```bash
+cd backend
+node scripts/cleanup-unused-images.js
+```
+
+To delete unused images with a backup:
+
+```bash
+cd backend
+node scripts/cleanup-unused-images.js --delete
+```
+
+## Verification
+
+Useful checks before pushing:
+
+```bash
+cd frontend
+npm run build
+
+cd ../backend
+node --input-type=module -e "import Article from './models/Article.js'; const a = Article.build({ title: '中文个人笔记', content: 'test' }); await a.validate(); console.log(a.slug ?? null); await Article.sequelize.close();"
+```
+
+## Git Remote
+
+```text
+origin: https://github.com/lieshy521-9577/veldr.git
+```

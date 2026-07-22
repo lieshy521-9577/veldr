@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-group">
-      <label for="slug" class="form-label">Slug</label>
+      <label for="slug" class="form-label">Slug（可选）</label>
       <div class="input-group">
         <span class="input-group-text">/</span>
         <input
@@ -28,14 +28,13 @@
           @input="onSlugChange"
           class="form-control"
           :class="{ 'is-invalid': errors.slug }"
-          placeholder="article-slug"
-          required
+        placeholder="仅在需要英文 URL 时填写"
         />
       </div>
       <div v-if="errors.slug" class="invalid-feedback">
         {{ errors.slug }}
       </div>
-      <small class="text-muted">URL-friendly version of the title</small>
+      <small class="text-muted">个人笔记可留空；英文标题会自动生成 URL 标识。</small>
     </div>
 
     <div class="form-group">

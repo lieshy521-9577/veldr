@@ -29,11 +29,8 @@ const Article = sequelize.define('Article', {
   slug: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: {
-        msg: 'Slug cannot be empty'
-      },
       is: {
         args: /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
         msg: 'Slug can only contain lowercase letters, numbers, and hyphens'
@@ -88,7 +85,7 @@ const Article = sequelize.define('Article', {
           generatedSlug: generatedSlug
         });
         
-        article.slug = generatedSlug;
+        if (generatedSlug) article.slug = generatedSlug;
       }
       
       console.log('✅ Final slug before validation:', article.slug);
