@@ -75,7 +75,7 @@ const onError = (event) => {
 .lazy-image-container {
   position: relative;
   overflow: hidden;
-  background-color: #f3f4f6;
+  background-color: var(--color-surface-muted);
 }
 
 .lazy-image {
@@ -99,8 +99,8 @@ const onError = (event) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f3f4f6;
-  color: #9ca3af;
+  background-color: var(--color-surface-muted);
+  color: var(--color-text-muted);
 }
 
 .placeholder-content {

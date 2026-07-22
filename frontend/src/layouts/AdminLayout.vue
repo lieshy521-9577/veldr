@@ -1,30 +1,36 @@
 <template>
   <div class="admin-layout">
-    <button class="mobile-menu-toggle" @click="toggleSidebar">
+    <button class="mobile-menu-toggle" type="button" aria-label="Open admin menu" @click="toggleSidebar">
       <i class="fas fa-bars"></i>
     </button>
+
     <aside class="admin-sidebar" :class="{ 'is-collapsed': isSidebarCollapsed }">
       <div class="sidebar-header">
-        <h2>CMS Admin</h2>
+        <router-link to="/" class="admin-brand" title="Back to Home">
+          <h2>Veldr Admin</h2>
+          <p>Write and organize</p>
+        </router-link>
       </div>
       <nav class="sidebar-nav">
         <router-link to="/admin/articles" class="nav-item">
           <i class="fas fa-newspaper"></i>
-          <span>Articles</span>
+          <span>Notes</span>
         </router-link>
         <router-link to="/admin/articles/create" class="nav-item nav-item--new">
           <i class="fas fa-plus-circle"></i>
-          <span>New Article</span>
+          <span>New Note</span>
         </router-link>
       </nav>
       <div class="sidebar-footer">
         <button @click="handleLogout" class="nav-item nav-item--logout">
           <i class="fas fa-sign-out-alt"></i>
-          <span>退出管理</span>
+          <span>Log out</span>
         </button>
       </div>
     </aside>
+
     <div class="overlay" :class="{ 'is-visible': !isSidebarCollapsed && isMobile }" @click="toggleSidebar"></div>
+
     <main class="admin-main">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -39,37 +45,35 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePasswordAuth } from '@/composables/usePasswordAuth.js';
+import { useTheme } from '@/composables/useTheme.js';
 
 const router = useRouter();
 const { logout } = usePasswordAuth();
+useTheme();
+
 const isSidebarCollapsed = ref(false);
 const isMobile = ref(false);
 
-// Toggle sidebar on mobile
 const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value;
 };
 
-// Check if mobile view
 const checkIfMobile = () => {
   isMobile.value = window.innerWidth < 768;
   isSidebarCollapsed.value = isMobile.value;
 };
 
-// Add event listener for window resize
 onMounted(() => {
   checkIfMobile();
   window.addEventListener('resize', checkIfMobile);
 });
 
-// Clean up event listener
 onBeforeUnmount(() => {
   window.removeEventListener('resize', checkIfMobile);
 });
 
-// Handle logout
 const handleLogout = () => {
-  if (confirm('确定要退出认证吗？')) {
+  if (confirm('Log out of admin?')) {
     logout();
     router.push('/');
   }
@@ -80,103 +84,144 @@ const handleLogout = () => {
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f5f7fa;
+  background:
+    radial-gradient(circle at top right, var(--color-accent-soft), transparent 24rem),
+    var(--color-bg);
   position: relative;
 }
 
 .admin-sidebar {
   width: 250px;
-  background-color: #2c3e50;
-  color: white;
-  padding: 1.5rem 0;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-  position: fixed;
   height: 100vh;
+  padding: 1.5rem 0;
+  position: fixed;
   z-index: 100;
   overflow-y: auto;
-  
-  @media (max-width: 767px) {
-    display: none; /* Hide sidebar completely on mobile */
-  }
-  
+  display: flex;
+  flex-direction: column;
+  color: white;
+  background-color: var(--color-sidebar-bg);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: transform 0.3s ease;
+
   @media (min-width: 768px) and (max-width: 1023px) {
     width: 220px;
+  }
+
+  @media (max-width: 767px) {
+    transform: translateX(-100%);
+
+    &:not(.is-collapsed) {
+      transform: translateX(0);
+    }
   }
 }
 
 .sidebar-header {
   padding: 0 1.5rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 1.5rem;
+}
+
+.admin-brand {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--border-radius);
+  transition: color 0.2s ease, transform 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateX(2px);
+    outline: none;
+
+    h2 {
+      color: var(--accent-strong);
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.82);
+    }
+  }
 
   h2 {
     margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+    color: #ffffff;
+    font-size: 1.22rem;
+    font-weight: 800;
+    transition: color 0.2s ease;
   }
+
+  p {
+    margin: 0.35rem 0 0;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.82rem;
+    transition: color 0.2s ease;
+  }
+}
+
+.sidebar-nav,
+.sidebar-footer {
+  padding: 0 0.75rem;
 }
 
 .sidebar-nav {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0 0.75rem;
-  flex: 1;
 }
 
 .sidebar-footer {
-  padding: 0 0.75rem;
   margin-top: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
   padding: 0.75rem 1rem;
   color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: 0;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  text-align: left;
   text-decoration: none;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--color-sidebar-hover);
     color: white;
   }
 
   &.router-link-active {
-    background-color: #3498db;
+    background-color: var(--color-sidebar-active);
     color: white;
-    font-weight: 500;
+    font-weight: 700;
   }
 
   &--new {
-    margin-top: 1rem;
-    background-color: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
-    
+    margin-top: 0.75rem;
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #6ee7b7;
+
     &:hover {
-      background-color: rgba(46, 204, 113, 0.2);
-      color: #2ecc71;
+      background-color: rgba(16, 185, 129, 0.2);
+      color: #a7f3d0;
     }
   }
-  
+
   &--logout {
-    background-color: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-    text-align: left;
-    
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+
     &:hover {
-      background-color: rgba(231, 76, 60, 0.2);
-      color: #e74c3c;
+      background-color: rgba(239, 68, 68, 0.18);
+      color: #fecaca;
     }
   }
 
@@ -188,48 +233,62 @@ const handleLogout = () => {
 
 .admin-main {
   flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-  margin-left: 0;
   width: 100%;
-  transition: margin-left 0.3s ease, width 0.3s ease;
-  
+  min-width: 0;
+  padding: 2rem;
+  margin-left: 0;
+  overflow-y: auto;
+
   @media (min-width: 768px) {
-    margin-left: 250px;
     width: calc(100% - 250px);
+    margin-left: 250px;
   }
-  
+
   @media (min-width: 768px) and (max-width: 1023px) {
-    margin-left: 220px;
     width: calc(100% - 220px);
+    margin-left: 220px;
   }
-  
+
   @media (max-width: 767px) {
-    padding: 1rem;
+    padding: 4.25rem 1rem 1rem;
   }
 }
 
-// Mobile menu toggle button
 .mobile-menu-toggle {
-  display: none; /* Hide menu toggle button on all screens by default */
-  
-  /* Only show on larger screens if you want to keep the toggle for other purposes */
-  @media (min-width: 768px) {
-    display: none;
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
+  display: none;
+
+  @media (max-width: 767px) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 120;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--color-heading);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-card);
   }
 }
 
-// Overlay for mobile when sidebar is open
 .overlay {
-  display: none; /* Hide overlay on all screens */
+  display: none;
+
+  &.is-visible {
+    @media (max-width: 767px) {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(15, 23, 42, 0.38);
+    }
+  }
 }
 
-// Transitions
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;

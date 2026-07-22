@@ -202,7 +202,7 @@ export function useArticle() {
   const deleteArticle = withErrorHandling(async (id) => {
     await articleStore.deleteArticleData(id);
     return true;
-  }, { context: 'Delete Article' });
+  }, { context: 'Delete Note' });
 
   // Fetch article
   const fetchArticle = withErrorHandling(async (id) => {

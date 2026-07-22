@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <!-- Navigation -->
-    <Navigation />
+    <Navigation v-if="$route.meta?.layout !== 'admin' && $route.meta?.layout !== 'minimal'" />
     
     <!-- Main Content -->
     <main class="app-main">
@@ -12,11 +11,10 @@
       </router-view>
     </main>
     
-    <!-- Footer -->
-    <footer class="app-footer">
+    <footer v-if="$route.meta?.layout !== 'admin' && $route.meta?.layout !== 'minimal'" class="app-footer">
       <div class="footer-container">
         <p class="footer-text">
-          &copy; 2023 Specms. All rights reserved.
+          &copy; 2026 Veldr. Private notes, calmly kept.
         </p>
       </div>
     </footer>
@@ -25,19 +23,23 @@
 
 <script setup>
 import Navigation from '@/layouts/Navigation.vue';
+import { useTheme } from '@/composables/useTheme.js';
+
+useTheme();
 </script>
 
 <style lang="scss">
 @use 'assets/styles/main.scss';
 
 #app {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
+  color: var(--color-text);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: var(--color-bg);
 }
 
 .app-main {
@@ -45,7 +47,8 @@ import Navigation from '@/layouts/Navigation.vue';
 }
 
 .app-footer {
-  background-color: white;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   
   .footer-container {
     max-width: 80rem;
@@ -63,10 +66,9 @@ import Navigation from '@/layouts/Navigation.vue';
   }
   
   .footer-text {
-    margin-top: 2rem;
     text-align: center;
-    font-size: 1rem;
-    color: #9ca3af;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
   }
 }
 

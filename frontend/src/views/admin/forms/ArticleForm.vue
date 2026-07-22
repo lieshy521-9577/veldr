@@ -1,6 +1,5 @@
 <template>
   <form @submit.prevent="handleSubmit" class="article-form">
-    <!-- Basic Information -->
     <ArticleBasicInfo
       v-model="formData"
       :errors="errors"
@@ -9,21 +8,18 @@
       @slug-change="onSlugChange"
     />
 
-    <!-- Content Editor -->
     <ArticleContent
       v-model="formData"
       :errors="errors"
       @content-change="onContentChange"
     />
 
-    <!-- Image Upload -->
     <ArticleImageUpload
       v-model="formData"
       :errors="errors"
       @image-change="onImageChange"
     />
 
-    <!-- Actions -->
     <ArticleActions
       :is-editing="isEditing"
       :is-submitting="isSubmitting"
@@ -73,156 +69,120 @@ const emit = defineEmits(['submit']);
 const router = useRouter();
 const toast = useToast();
 
-// Use article composable
 const {
   formData,
   isSubmitting,
   isEditing,
-  hasContent,
-  wordCount,
-  charCount,
   validateForm,
-  generateSlug,
   updateSlug,
   resetForm,
-  handleFileUpload,
   prepareFormData
 } = useArticle();
 
-// Local state
 const errors = ref({});
 const showStatus = ref(false);
 const statusMessage = ref('');
 const isTogglingStatus = ref(false);
 
-// Computed properties
 const isFormValid = computed(() => {
   const validationErrors = validateForm();
   return Object.keys(validationErrors).length === 0;
 });
 
-// Watch for changes in the article prop
-watch(() => props.article, (newVal) => {
-  resetForm(newVal);
+watch(() => props.article, (newValue) => {
+  resetForm(newValue);
 }, { deep: true, immediate: true });
 
-// Watch for title changes to auto-generate slug
 watch(() => formData.value.title, () => {
   updateSlug();
 });
 
-// Event handlers
-const onTitleChange = (title) => {
-  // Additional title change logic if needed
+const onTitleChange = () => {};
+const onSlugChange = () => {};
+const onContentChange = () => {};
+const onImageChange = () => {};
+
+const validateBeforeSave = () => {
+  const validationErrors = validateForm();
+  errors.value = validationErrors;
+
+  if (Object.keys(validationErrors).length > 0) {
+    showStatus.value = true;
+    statusMessage.value = 'Please fix the errors below before saving';
+    return false;
+  }
+
+  return true;
 };
 
-const onSlugChange = (slug) => {
-  // Additional slug change logic if needed
+const submitFormData = () => {
+  const data = prepareFormData();
+  emit('submit', data);
 };
 
-const onContentChange = (content) => {
-  // Additional content change logic if needed
-};
-
-const onImageChange = (file) => {
-  // Additional image change logic if needed
-};
-
-// Handle form submission
 const handleSubmit = async () => {
   isSubmitting.value = true;
   errors.value = {};
   showStatus.value = false;
-  
+
   try {
-    // Validate form
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      errors.value = validationErrors;
+    if (!validateBeforeSave()) {
       isSubmitting.value = false;
       return;
     }
-    
-    // Prepare form data
-    const data = prepareFormData();
-    
-    // Emit the submit event with form data
-    emit('submit', data);
-    
-    // 注意：这里不重置isSubmitting，让父组件处理成功/失败后的状态重置
-    
+
+    submitFormData();
   } catch (error) {
-    console.error('Error submitting form:', error);
-    toast.error('An error occurred while saving the article');
+    console.error('Error submitting note:', error);
+    toast.error('An error occurred while saving the note');
     isSubmitting.value = false;
   }
 };
 
-// Handle save
 const handleSave = async () => {
   isSubmitting.value = true;
   errors.value = {};
   showStatus.value = false;
-  
+
   try {
-    // Validate form
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      errors.value = validationErrors;
-      showStatus.value = true;
-      statusMessage.value = 'Please fix the errors below before saving';
+    if (!validateBeforeSave()) {
       isSubmitting.value = false;
       return;
     }
-    
-    // Prepare form data
-    const data = prepareFormData();
-    
-    // Emit the submit event with form data
-    emit('submit', data);
-    
-    // 注意：这里不重置isSubmitting，让父组件处理成功/失败后的状态重置
-    
+
+    submitFormData();
   } catch (error) {
-    console.error('Error saving article:', error);
-    toast.error('An error occurred while saving the article');
+    console.error('Error saving note:', error);
+    toast.error('An error occurred while saving the note');
     isSubmitting.value = false;
   }
 };
 
-// Handle status change
 const handleStatusChange = (newStatus) => {
-  const oldStatus = formData.value.status;
-  
-  // Update form data
   formData.value.status = newStatus;
-  
-  // Show status message
   showStatus.value = true;
+
   const statusMessages = {
-    'draft': 'Draft',
-    'private': 'Private',
-    'published': 'Published'
+    draft: 'Draft',
+    private: 'Private',
+    published: 'Published'
   };
+
   statusMessage.value = `Status set to ${statusMessages[newStatus]}`;
-  
-  // Auto-hide status message after 3 seconds
+
   setTimeout(() => {
     showStatus.value = false;
   }, 3000);
 };
 
-// Handle cancel
 const handleCancel = () => {
   router.back();
 };
 
-// Set editing mode
-watch(() => props.isEditing, (newVal) => {
-  isEditing.value = newVal;
+watch(() => props.isEditing, (newValue) => {
+  isEditing.value = newValue;
 }, { immediate: true });
 
-// Expose methods for parent component
 const resetSubmittingState = () => {
   isSubmitting.value = false;
 };
@@ -233,6 +193,8 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-// Form-specific styles can be added here if needed
-// Most styles are now handled by individual form components
+.article-form {
+  display: grid;
+  gap: 1rem;
+}
 </style>

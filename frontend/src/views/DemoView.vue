@@ -1,78 +1,74 @@
 <template>
   <div class="demo-view">
-    <!-- Hero Section -->
     <section class="hero-section">
-      <div class="container">
+      <div class="container hero-grid">
         <div class="hero-content">
-          <h1 class="hero-title">Welcome to TinyMCE CMS</h1>
+          <h1 class="hero-title">Veldr Personal Notes</h1>
           <p class="hero-subtitle">
-            A modern, responsive content management system built with Vue.js and TinyMCE editor.
-            Create, edit, and manage your content with ease.
+            A quiet space for your thoughts, ideas, and writing. Private by design. Yours to keep.
           </p>
           <div class="hero-actions">
-            <router-link to="/admin" class="btn btn-primary btn-lg">
-              <i class="fas fa-cog"></i>
-              Admin Panel
+            <router-link to="/admin/articles/create" class="btn btn-primary btn-lg">
+              <i class="fas fa-plus"></i>
+              New Note
             </router-link>
             <router-link to="/articles" class="btn btn-outline-primary btn-lg">
               <i class="fas fa-lock"></i>
-              Private Articles
+              Private Notes
             </router-link>
           </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="sun-mark"></div>
+          <i class="fas fa-seedling plant-mark"></i>
+          <div class="line line-one"></div>
+          <div class="line line-two"></div>
+          <div class="line line-three"></div>
         </div>
       </div>
     </section>
 
-    <!-- Articles Section -->
     <section id="articles" class="articles-section">
       <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Latest Articles</h2>
-          <p class="section-subtitle">Discover our latest content and insights</p>
+        <div class="section-header section-header--row">
+          <div>
+            <h2 class="section-title">Recent Notes</h2>
+            <p class="section-subtitle">Recent thoughts and records from your private writing space.</p>
+          </div>
+          <router-link to="/articles" class="section-link">
+            View all notes
+            <i class="fas fa-arrow-right"></i>
+          </router-link>
         </div>
 
-        <!-- Loading State -->
-        <div v-if="loading" class="articles-loading">
+        <div v-if="loading" class="state-panel">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
-          <p class="mt-3">Loading articles...</p>
+          <p>Loading notes...</p>
         </div>
 
-        <!-- Error State -->
-        <div v-else-if="error" class="articles-error">
-          <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle"></i>
-            {{ error }}
+        <div v-else-if="error" class="state-panel state-panel--error">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ error }}
+        </div>
+
+        <div v-else-if="articles.length === 0" class="empty-strip">
+          <i class="fas fa-pen-nib"></i>
+          <div>
+            <h3>No notes yet</h3>
+            <p>Start with one sentence, one thought, or one fragment.</p>
           </div>
+          <router-link to="/admin/articles/create" class="btn btn-primary">
+            Create First Note
+          </router-link>
         </div>
 
-        <!-- Empty State -->
-        <div v-else-if="articles.length === 0" class="articles-empty">
-          <div class="empty-state">
-            <i class="fas fa-newspaper empty-icon"></i>
-            <h3>No articles yet</h3>
-            <p>Be the first to create an article!</p>
-            <router-link to="/admin/articles/create" class="btn btn-primary">
-              <i class="fas fa-plus"></i>
-              Create First Article
-            </router-link>
-          </div>
-        </div>
-
-        <!-- Articles Grid -->
         <div v-else class="articles-grid">
-          <article 
-            v-for="article in articles" 
-            :key="article.id" 
-            class="article-card"
-          >
+          <article v-for="article in articles" :key="article.id" class="article-card">
             <div class="article-image" v-if="article.featuredImage">
-              <LazyImage 
-                :src="`/uploads/${article.featuredImage}`" 
-                :alt="article.title"
-                :lazy="true"
-              />
+              <LazyImage :src="`/uploads/${article.featuredImage}`" :alt="article.title" :lazy="true" />
             </div>
             <div class="article-content">
               <div class="article-meta">
@@ -84,7 +80,7 @@
                 </span>
               </div>
               <h3 class="article-title">
-                <router-link :to="`/article/${article.slug}`">
+                <router-link :to="articleLink(article)">
                   {{ article.title }}
                 </router-link>
               </h3>
@@ -92,11 +88,8 @@
                 {{ article.excerpt }}
               </p>
               <div class="article-footer">
-                <router-link 
-                  :to="`/article/${article.slug}`" 
-                  class="article-link"
-                >
-                  Read More
+                <router-link :to="articleLink(article)" class="article-link">
+                  Read Note
                   <i class="fas fa-arrow-right"></i>
                 </router-link>
               </div>
@@ -104,63 +97,48 @@
           </article>
         </div>
 
-        <!-- Load More Button -->
         <div v-if="articles.length > 0 && hasMore" class="load-more">
-          <button 
-            @click="loadMore" 
-            :disabled="loadingMore"
-            class="btn btn-outline-primary"
-          >
+          <button @click="loadMore" :disabled="loadingMore" class="btn btn-outline-primary">
             <span v-if="loadingMore" class="spinner-border spinner-border-sm me-2"></span>
-            Load More Articles
+            Load More Notes
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Features Section -->
     <section class="features-section">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">Why Choose Our CMS?</h2>
-          <p class="section-subtitle">Powerful features for modern content management</p>
+          <h2 class="section-title">Built for focus. Designed for your mind.</h2>
         </div>
         <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-edit"></i>
+          <div class="feature-item">
+            <i class="fas fa-lock"></i>
+            <div>
+              <h3>Private by default</h3>
+              <p>Your notes are visible only to you until you decide otherwise.</p>
             </div>
-            <h3 class="feature-title">Rich Text Editor</h3>
-            <p class="feature-description">
-              Powered by TinyMCE, create beautiful content with advanced formatting options.
-            </p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-mobile-alt"></i>
+          <div class="feature-item">
+            <i class="fas fa-pen"></i>
+            <div>
+              <h3>Write without distraction</h3>
+              <p>A clean space for drafts, daily thoughts, and unfinished ideas.</p>
             </div>
-            <h3 class="feature-title">Responsive Design</h3>
-            <p class="feature-description">
-              Your content looks great on all devices with our responsive design system.
-            </p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-image"></i>
+          <div class="feature-item">
+            <i class="fas fa-tag"></i>
+            <div>
+              <h3>Organize your way</h3>
+              <p>Use titles, status, and images without forcing a rigid system.</p>
             </div>
-            <h3 class="feature-title">Media Management</h3>
-            <p class="feature-description">
-              Upload and manage images, videos, and other media files with ease.
-            </p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-search"></i>
+          <div class="feature-item">
+            <i class="fas fa-cloud"></i>
+            <div>
+              <h3>Access anywhere</h3>
+              <p>Keep your writing close across the places you work and think.</p>
             </div>
-            <h3 class="feature-title">SEO Friendly</h3>
-            <p class="feature-description">
-              Built with SEO best practices to help your content rank better in search engines.
-            </p>
           </div>
         </div>
       </div>
@@ -181,12 +159,12 @@ const hasMore = ref(false);
 const currentPage = ref(1);
 const pageSize = 6;
 
-// Format date for display
+const articleLink = (article) => `/article/${article.slug || article.id}`;
+
 const formatDate = (dateString) => {
   return format(new Date(dateString), 'MMM d, yyyy');
 };
 
-// Fetch articles
 const fetchArticles = async (page = 1, append = false) => {
   try {
     if (page === 1) {
@@ -197,20 +175,15 @@ const fetchArticles = async (page = 1, append = false) => {
     }
 
     const response = await fetch(`/api/articles?page=${page}&limit=${pageSize}&status=published`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch articles');
     }
 
     const data = await response.json();
-    
+
     if (data.success) {
-      if (append) {
-        articles.value = [...articles.value, ...data.data];
-      } else {
-        articles.value = data.data;
-      }
-      
+      articles.value = append ? [...articles.value, ...data.data] : data.data;
       hasMore.value = data.data.length === pageSize;
       currentPage.value = page;
     } else {
@@ -218,19 +191,17 @@ const fetchArticles = async (page = 1, append = false) => {
     }
   } catch (err) {
     console.error('Error fetching articles:', err);
-    error.value = 'Failed to load articles. Please try again later.';
+    error.value = 'Failed to load notes. Please try again later.';
   } finally {
     loading.value = false;
     loadingMore.value = false;
   }
 };
 
-// Load more articles
 const loadMore = () => {
   fetchArticles(currentPage.value + 1, true);
 };
 
-// Fetch articles on component mount
 onMounted(() => {
   fetchArticles();
 });
@@ -242,395 +213,367 @@ onMounted(() => {
 
 .demo-view {
   min-height: 100vh;
+  background: var(--color-bg);
 }
 
-// Hero Section
+.container {
+  width: min(100% - 2rem, 1280px);
+  margin: 0 auto;
+}
+
 .hero-section {
-  background: linear-gradient(135deg, $primary-color 0%, color.adjust($primary-color, $lightness: -20%) 100%);
-  color: white;
-  padding: 6rem 0;
+  background:
+    radial-gradient(circle at 80% 28%, var(--color-accent-soft), transparent 18rem),
+    linear-gradient(180deg, var(--color-hero-bg), var(--color-bg));
+  border-bottom: 1px solid var(--color-border);
+  padding: 5.5rem 0 4.5rem;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 7rem);
+}
+
+.hero-title {
+  max-width: 52rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-heading);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(3rem, 7vw, 5.7rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.hero-subtitle {
+  max-width: 42rem;
+  color: var(--color-text);
+  font-size: 1.2rem;
+  line-height: 1.75;
+  margin-bottom: 2.5rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.hero-visual {
+  position: relative;
+  min-height: 21rem;
+  color: var(--color-accent);
+}
+
+.sun-mark {
+  position: absolute;
+  top: 1rem;
+  right: 21%;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  background: var(--color-accent-soft);
+}
+
+.plant-mark {
+  position: absolute;
+  left: 30%;
+  top: 8rem;
+  font-size: 5.5rem;
+}
+
+.line {
+  position: absolute;
+  right: 10%;
+  height: 1px;
+  background: var(--color-accent);
+  opacity: 0.72;
+}
+
+.line-one { top: 12rem; width: 19rem; }
+.line-two { top: 13.4rem; width: 24rem; }
+.line-three { top: 14.8rem; width: 17rem; }
+
+.articles-section,
+.features-section {
+  padding: 4.5rem 0;
+}
+
+.section-header {
+  margin-bottom: 1.75rem;
   text-align: center;
-  
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-  
-  .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .hero-title {
-    font-size: 3.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    line-height: 1.2;
-    
-    @media (max-width: 768px) {
-      font-size: 2.5rem;
-    }
-  }
-  
-  .hero-subtitle {
-    font-size: 1.25rem;
-    margin-bottom: 2.5rem;
-    opacity: 0.9;
-    line-height: 1.6;
-    
-    @media (max-width: 768px) {
-      font-size: 1.125rem;
-    }
-  }
-  
-  .hero-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    
-    .btn {
-      min-width: 160px;
-    }
-  }
 }
 
-// Articles Section
-.articles-section {
-  padding: 5rem 0;
-  background-color: $bg-color;
-  
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-  
-  .section-header {
-    text-align: center;
-    margin-bottom: 3rem;
-  }
-  
-  .section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: $heading-color;
-    margin-bottom: 1rem;
-  }
-  
-  .section-subtitle {
-    font-size: 1.125rem;
-    color: $text-muted;
-    max-width: 600px;
-    margin: 0 auto;
-  }
+.section-header--row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  text-align: left;
 }
 
-// Loading States
-.articles-loading {
-  text-align: center;
-  padding: 3rem 0;
-  
-  .spinner-border {
-    width: 3rem;
-    height: 3rem;
-  }
+.section-title {
+  margin: 0;
+  color: var(--color-heading);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.75rem;
+  line-height: 1.2;
 }
 
-.articles-error {
-  text-align: center;
-  padding: 3rem 0;
+.section-subtitle {
+  margin-top: 0.55rem;
+  color: var(--color-text-muted);
+  font-size: 1rem;
 }
 
-.articles-empty {
-  text-align: center;
-  padding: 4rem 0;
-  
-  .empty-state {
-    .empty-icon {
-      font-size: 4rem;
-      color: $text-muted;
-      margin-bottom: 1.5rem;
-    }
-    
-    h3 {
-      font-size: 1.5rem;
-      color: $heading-color;
-      margin-bottom: 0.5rem;
-    }
-    
-    p {
-      color: $text-muted;
-      margin-bottom: 2rem;
-    }
-  }
+.section-link,
+.article-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-accent);
+  font-weight: 700;
+  text-decoration: none;
 }
 
-// Articles Grid
 .articles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 2rem;
-  margin-bottom: 3rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
 }
 
 .article-card {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
-  transition: all 0.3s ease;
-  
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    border-color: var(--color-accent-border);
+    box-shadow: var(--shadow-soft);
   }
-  
-  .article-image {
+}
+
+.article-image {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+
+  img {
     width: 100%;
-    height: 200px;
-    overflow: hidden;
-    
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.3s ease;
-    }
+    height: 100%;
+    object-fit: cover;
   }
-  
-  &:hover .article-image img {
-    transform: scale(1.05);
+}
+
+.article-content {
+  padding: 1.35rem;
+}
+
+.article-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.article-status {
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+
+  &.status-published {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
   }
-  
-  .article-content {
-    padding: 1.5rem;
+
+  &.status-draft {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: var(--color-warning);
   }
-  
-  .article-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-  }
-  
-  .article-date {
-    color: $text-muted;
-  }
-  
-  .article-status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    
-    &.status-published {
-      background-color: rgba($success-color, 0.1);
-      color: $success-color;
-    }
-    
-    &.status-draft {
-      background-color: rgba($warning-color, 0.1);
-      color: $warning-color;
-    }
-  }
-  
-  .article-title {
-    margin-bottom: 1rem;
-    
-    a {
-      color: $heading-color;
-      text-decoration: none;
-      font-size: 1.25rem;
-      font-weight: 600;
-      line-height: 1.4;
-      transition: color 0.2s ease;
-      
-      &:hover {
-        color: $primary-color;
-      }
-    }
-  }
-  
-  .article-excerpt {
-    color: $text-muted;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .article-footer {
-    .article-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: $primary-color;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s ease;
-      
-      &:hover {
-        color: color.adjust($primary-color, $lightness: -10%);
-      }
+}
+
+.article-title {
+  margin-bottom: 0.8rem;
+
+  a {
+    color: var(--color-heading);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-accent);
     }
   }
 }
 
-// Load More
+.article-excerpt {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.empty-strip,
+.state-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.empty-strip {
+  justify-content: flex-start;
+
+  > i {
+    color: var(--color-accent);
+    font-size: 2rem;
+  }
+
+  h3 {
+    margin: 0 0 0.25rem;
+    color: var(--color-heading);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+
+  .btn {
+    margin-left: auto;
+  }
+}
+
+.state-panel--error {
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.24);
+}
+
 .load-more {
   text-align: center;
-  margin-top: 3rem;
+  margin-top: 2rem;
 }
 
-// Features Section
 .features-section {
-  padding: 5rem 0;
-  background: white;
-  
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-  
-  .section-header {
-    text-align: center;
-    margin-bottom: 3rem;
-  }
-  
-  .section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: $heading-color;
-    margin-bottom: 1rem;
-  }
-  
-  .section-subtitle {
-    font-size: 1.125rem;
-    color: $text-muted;
-    max-width: 600px;
-    margin: 0 auto;
-  }
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
 }
 
-.feature-card {
-  text-align: center;
-  padding: 2rem 1.5rem;
-  
-  .feature-icon {
-    width: 4rem;
-    height: 4rem;
-    background: linear-gradient(135deg, $primary-color, color.adjust($primary-color, $lightness: -10%));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    
-    i {
-      font-size: 1.5rem;
-      color: white;
-    }
-  }
-  
-  .feature-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: $heading-color;
-    margin-bottom: 1rem;
-  }
-  
-  .feature-description {
-    color: $text-muted;
-    line-height: 1.6;
-  }
-}
+.feature-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-left: 1px solid var(--color-border);
 
-// Utility Classes
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
+  &:first-child {
+    border-left: 0;
+  }
+
+  i {
+    color: var(--color-accent);
+    font-size: 1.75rem;
+    margin-top: 0.15rem;
+  }
+
+  h3 {
+    margin: 0 0 0.45rem;
+    color: var(--color-heading);
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+    font-size: 0.92rem;
+  }
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  line-height: 1.5;
-  color: white;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
   text-align: center;
   text-decoration: none;
-  vertical-align: middle;
   cursor: pointer;
-  user-select: none;
-  background-color: $primary-color;
-  border: 1px solid $primary-color;
-  border-radius: 0.5rem;
-  transition: all 0.15s ease-in-out;
-  
-  &:hover {
-    background-color: color.adjust($primary-color, $lightness: -10%);
-    border-color: color.adjust($primary-color, $lightness: -10%);
-    color: white;
-    text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
   }
-  
-  &-outline-primary {
-    background-color: transparent;
-    color: $primary-color;
-    
-    &:hover {
-      background-color: rgba($primary-color, 0.1);
-      color: $primary-color;
-    }
-  }
-  
-  &-lg {
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
-  }
-  
+
   &:disabled {
     opacity: 0.65;
     cursor: not-allowed;
   }
 }
 
-.alert {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.375rem;
-  
-  &-danger {
-    color: #842029;
-    background-color: #f8d7da;
-    border-color: #f5c2c7;
+.btn-primary {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  box-shadow: 0 10px 20px var(--color-accent-soft);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-accent-strong);
+    border-color: var(--color-accent-strong);
   }
+}
+
+.btn-outline-primary {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-heading);
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+  }
+}
+
+.btn-lg {
+  min-width: 11rem;
+  min-height: 3.5rem;
+  padding: 1rem 1.45rem;
+  font-size: 1rem;
 }
 
 .spinner-border {
@@ -642,7 +585,7 @@ onMounted(() => {
   border-right-color: transparent;
   border-radius: 50%;
   animation: spinner-border 0.75s linear infinite;
-  
+
   &-sm {
     width: 1rem;
     height: 1rem;
@@ -670,7 +613,52 @@ onMounted(() => {
   margin-right: 0.5rem;
 }
 
-.mt-3 {
-  margin-top: 1rem;
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-visual {
+    min-height: 12rem;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .feature-item:nth-child(odd) {
+    border-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-section {
+    padding: 3.5rem 0;
+  }
+
+  .section-header--row,
+  .empty-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .empty-strip .btn {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-item {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+    padding: 1.35rem 0;
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
 }
 </style>

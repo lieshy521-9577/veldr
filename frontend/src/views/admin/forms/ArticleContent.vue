@@ -1,12 +1,16 @@
 <template>
-  <div class="article-content">
+  <section class="article-content-form form-section">
+    <div class="section-heading">
+      <h2>Content</h2>
+      <p>Write the body of the note. Formatting stays inside the editor.</p>
+    </div>
+
     <div class="form-group">
-      <label class="form-label">Content</label>
       <TinyMCEEditor
         v-model="localContent"
         :api-key="tinymceApiKey"
         :height="500"
-        :placeholder="'Start writing your article...'"
+        :placeholder="'Start writing your note...'"
         :show-char-count="true"
         @change="onContentChange"
       />
@@ -15,22 +19,21 @@
       </div>
     </div>
 
-    <!-- Content Statistics -->
     <div class="content-stats">
       <div class="stat-item">
-        <span class="stat-label">Words:</span>
+        <span class="stat-label">Words</span>
         <span class="stat-value">{{ wordCount }}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">Characters:</span>
+        <span class="stat-label">Characters</span>
         <span class="stat-value">{{ charCount }}</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">Reading Time:</span>
+        <span class="stat-label">Reading Time</span>
         <span class="stat-value">{{ readingTime }} min</span>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup>
@@ -49,20 +52,15 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'content-change']);
-
-// Load TinyMCE API key from environment variables
 const tinymceApiKey = import.meta.env.VITE_TINYMCE_API_KEY || '';
 
-// Local content state to ensure it's always a string
 const localContent = computed({
   get: () => String(props.modelValue.content || ''),
   set: (value) => {
-    const stringValue = String(value || '');
-    emit('update:modelValue', { ...props.modelValue, content: stringValue });
+    emit('update:modelValue', { ...props.modelValue, content: String(value || '') });
   }
 });
 
-// Watch for modelValue changes and update local content
 watch(() => props.modelValue.content, (newValue) => {
   const stringValue = String(newValue || '');
   if (stringValue !== localContent.value) {
@@ -70,26 +68,18 @@ watch(() => props.modelValue.content, (newValue) => {
   }
 }, { immediate: true });
 
-// Computed properties for content statistics
 const wordCount = computed(() => {
-  const content = String(props.modelValue.content || '');
-  const text = content.replace(/<[^>]*>/g, ' ').trim();
+  const text = String(props.modelValue.content || '').replace(/<[^>]*>/g, ' ').trim();
   if (!text) return 0;
-  return text.split(/\s+/).filter(word => word.length > 0).length;
+  return text.split(/\s+/).filter(Boolean).length;
 });
 
 const charCount = computed(() => {
-  const content = String(props.modelValue.content || '');
-  return content.replace(/<[^>]*>/g, '').length;
+  return String(props.modelValue.content || '').replace(/<[^>]*>/g, '').length;
 });
 
-const readingTime = computed(() => {
-  const words = wordCount.value;
-  // Average reading speed is about 200-250 words per minute
-  return Math.ceil(words / 200);
-});
+const readingTime = computed(() => Math.max(1, Math.ceil(wordCount.value / 200)));
 
-// Handle content change
 const onContentChange = (content) => {
   const stringContent = String(content || '');
   localContent.value = stringContent;
@@ -98,83 +88,75 @@ const onContentChange = (content) => {
 </script>
 
 <style lang="scss" scoped>
-.article-content {
-  .form-group {
-    margin-bottom: 1rem;
+.form-section {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section-heading {
+  margin-bottom: 1rem;
+
+  h2 {
+    margin: 0;
+    color: var(--color-heading);
+    font-size: 1.1rem;
   }
 
-  .form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #374151;
-  }
-
-  .invalid-feedback {
-    width: 100%;
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    color: #ef4444;
-
-    &.d-block {
-      display: block;
-    }
-  }
-
-  .content-stats {
-    display: flex;
-    gap: 1.5rem;
-    padding: 1rem;
-    background-color: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.375rem;
-    margin-top: 0.5rem;
-
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.25rem;
-
-      .stat-label {
-        font-size: 0.75rem;
-        color: #6b7280;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      .stat-value {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: #374151;
-      }
-    }
+  p {
+    margin: 0.35rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
   }
 }
 
-// Responsive design
-@media (max-width: 768px) {
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.invalid-feedback {
+  margin-top: 0.35rem;
+  color: var(--color-danger);
+  font-size: 0.86rem;
+}
+
+.content-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.stat-item {
+  display: grid;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.stat-label {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  color: var(--color-heading);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+@media (max-width: 640px) {
   .content-stats {
-    flex-direction: column;
-    gap: 0.75rem;
+    grid-template-columns: 1fr;
+  }
 
-    .stat-item {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-
-      .stat-label {
-        font-size: 0.875rem;
-        text-transform: none;
-      }
-
-      .stat-value {
-        font-size: 1rem;
-      }
-    }
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    text-align: left;
   }
 }
 </style>
-
-

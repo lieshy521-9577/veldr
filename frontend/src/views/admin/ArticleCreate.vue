@@ -1,16 +1,17 @@
 <template>
   <div class="article-create">
     <div class="page-header">
-      <h1>Create New Article</h1>
-    </div>
-    
-    <div class="card">
-      <div class="card-body">
-        <ArticleForm
-          ref="articleForm"
-          @submit="createArticle"
-        />
+      <div>
+        <h1>New Note</h1>
+        <p>Start a draft, add a main image, and choose how private it should be.</p>
       </div>
+    </div>
+
+    <div class="panel">
+      <ArticleForm
+        ref="articleForm"
+        @submit="createArticle"
+      />
     </div>
   </div>
 </template>
@@ -30,37 +31,28 @@ const articleForm = ref(null);
 const createArticle = async (formData) => {
   try {
     const article = await articleStore.createArticle(formData);
-    
-    toast.success('Article created successfully!');
+
+    toast.success('Note created');
     if (article?.id) {
       router.push({ name: 'ArticleEdit', params: { id: article.id } });
     } else {
       router.push({ name: 'ArticleList' });
     }
   } catch (error) {
-    console.error('Error creating article:', error);
-    
-    // 重置表单提交状态
-    if (articleForm.value && articleForm.value.resetSubmittingState) {
-      articleForm.value.resetSubmittingState();
-    }
-    
-    // 显示具体的验证错误信息
+    console.error('Error creating note:', error);
+
+    articleForm.value?.resetSubmittingState?.();
+
     if (error.message && error.message.includes('Validation error')) {
-      // 解析验证错误信息
-      const errorMessages = error.message.split(',').map(msg => msg.trim());
-      const titleError = errorMessages.find(msg => msg.includes('Title must be between 1 and 255'));
-      const slugError = errorMessages.find(msg => msg.includes('Slug'));
-      
-      if (titleError) {
-        alert('请输入长度1-255字符的文章名');
-      } else if (slugError) {
-        alert('文章别名不能为空，且只能包含小写字母、数字和连字符');
+      if (error.message.includes('Title')) {
+        alert('Please enter a note title between 1 and 255 characters.');
+      } else if (error.message.includes('Slug')) {
+        alert('Slug can contain only lowercase letters, numbers, and hyphens.');
       } else {
-        alert('请检查表单填写是否正确');
+        alert('Please check the form and try again.');
       }
     } else {
-      toast.error(error.message || 'Failed to create article');
+      toast.error(error.message || 'Failed to create note');
     }
   }
 };
@@ -69,23 +61,25 @@ const createArticle = async (formData) => {
 <style lang="scss" scoped>
 .page-header {
   margin-bottom: 1.5rem;
-  
+
   h1 {
     margin: 0;
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #2c3e50;
+    color: var(--color-heading);
+    font-size: 2rem;
+    line-height: 1.1;
+  }
+
+  p {
+    margin: 0.45rem 0 0;
+    color: var(--color-text-muted);
   }
 }
 
-.card {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  
-  &-body {
-    padding: 1.5rem;
-  }
+.panel {
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
 }
 </style>

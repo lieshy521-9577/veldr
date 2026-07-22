@@ -1,6 +1,5 @@
 <template>
   <div class="article-view">
-    <!-- Loading state -->
     <div v-if="loading" class="loading-container">
       <div class="loading-skeleton">
         <div class="skeleton-line skeleton-title"></div>
@@ -13,71 +12,57 @@
       </div>
     </div>
 
-    <!-- Error state -->
     <div v-else-if="error" class="error-container">
       <div class="error-alert">
-        <div class="error-content">
-          <div class="error-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <div class="error-message">
-            <p>{{ error }}</p>
-          </div>
-        </div>
+        <i class="fas fa-circle-exclamation"></i>
+        <p>{{ error }}</p>
       </div>
-      <div class="error-actions">
-        <router-link to="/" class="back-link">
-          ← Back to articles
-        </router-link>
-      </div>
+      <router-link to="/" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to notes
+      </router-link>
     </div>
 
-    <!-- Article content -->
     <article v-else class="article-container">
       <header class="article-header">
         <div class="article-meta">
           <time :datetime="article.createdAt">{{ formatDate(article.createdAt) }}</time>
-          <span class="meta-separator">•</span>
+          <span class="meta-separator"></span>
           <span>{{ readingTime }} min read</span>
         </div>
         <h1 class="article-title">{{ article.title }}</h1>
-        
-        <div v-if="article.excerpt" class="article-excerpt">
+
+        <p v-if="article.excerpt" class="article-excerpt">
           {{ article.excerpt }}
-        </div>
-        
-        <div v-if="article.featuredImage" class="featured-image-container">
-          <img :src="article.featuredImage" :alt="article.title" class="featured-image" style="max-height: 30vh;min-height: 17vh; width: fit-content; aspect-ratio: 16/9;">
-        </div>
+        </p>
+
+        <figure v-if="article.featuredImage" class="featured-image-container">
+          <img :src="article.featuredImage" :alt="article.title" class="featured-image">
+        </figure>
       </header>
 
       <div class="article-content" v-html="article.content"></div>
 
       <footer class="article-footer">
-        <div class="footer-content">
-          <div class="footer-info">
-            <div>
-              <p class="publish-date">
-                Published on {{ formatFullDate(article.publishedAt || article.createdAt) }}
-              </p>
-              <p v-if="article.updatedAt !== article.createdAt" class="update-date">
-                Updated on {{ formatFullDate(article.updatedAt) }}
-              </p>
-            </div>
-          </div>
-          <router-link to="/" class="back-link">
-            ← Back to articles
-          </router-link>
+        <div>
+          <p class="publish-date">
+            Published on {{ formatFullDate(article.publishedAt || article.createdAt) }}
+          </p>
+          <p v-if="article.updatedAt !== article.createdAt" class="update-date">
+            Updated on {{ formatFullDate(article.updatedAt) }}
+          </p>
         </div>
+        <router-link to="/" class="back-link">
+          <i class="fas fa-arrow-left"></i>
+          Back to notes
+        </router-link>
       </footer>
     </article>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -85,37 +70,31 @@ const article = ref({});
 const loading = ref(true);
 const error = ref(null);
 
-// Format date to a readable format (e.g., "January 1, 2023")
 const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString(undefined, options);
+  return new Date(dateString).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 };
 
-// Format full date with time
 const formatFullDate = (dateString) => {
-  const options = { 
-    year: 'numeric', 
-    month: 'long', 
+  return new Date(dateString).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  };
-  return new Date(dateString).toLocaleDateString(undefined, options);
+  });
 };
 
-// Calculate reading time
 const readingTime = computed(() => {
   if (!article.value.content) return 0;
-  
-  // Remove HTML tags and count words
   const text = article.value.content.replace(/<[^>]*>/g, ' ');
-  const wordCount = text.trim().split(/\s+/).length;
-  
-  // Average reading speed is about 200-250 words per minute
-  return Math.ceil(wordCount / 200);
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(wordCount / 200));
 });
 
-// Fetch article by ID or slug
 const fetchArticle = async () => {
   const { id, slug } = route.params;
   const key = id ?? slug;
@@ -124,176 +103,114 @@ const fetchArticle = async () => {
   try {
     loading.value = true;
     error.value = null;
-    
+
     let url = `/api/articles/${key}`;
-    
-    // If not UUID, treat as slug
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(key))) {
       url = `/api/articles/slug/${key}`;
     }
-    
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Article not found');
-      }
-      throw new Error('Failed to fetch article');
+      throw new Error(response.status === 404 ? 'Article not found' : 'Failed to fetch article');
     }
-    
+
     const data = await response.json();
-    
-    if (data.success) {
-      // Check if article is accessible (published or private)
-      if (data.data.status === 'draft') {
-        throw new Error('Article not found');
-      }
-      
-      // Prepend the base URL to featured images
-      article.value = {
-        ...data.data,
-        featuredImage: data.data.featuredImage ? `/uploads/${data.data.featuredImage}` : null
-      };
-      
-      // Update the document title
-      document.title = `${article.value.title} | Specms`;
-      
-      // Update meta description if excerpt is available
-      if (article.value.excerpt) {
-        const metaDescription = document.querySelector('meta[name="description"]');
-        if (metaDescription) {
-          metaDescription.setAttribute('content', article.value.excerpt);
-        }
-      }
-    } else {
+
+    if (!data.success) {
       throw new Error(data.message || 'Failed to load article');
+    }
+
+    if (data.data.status === 'draft') {
+      throw new Error('Article not found');
+    }
+
+    article.value = {
+      ...data.data,
+      featuredImage: data.data.featuredImage ? `/uploads/${data.data.featuredImage}` : null
+    };
+
+    document.title = `${article.value.title} | Veldr`;
+
+    if (article.value.excerpt) {
+      const metaDescription = document.querySelector('meta[name="description"]');
+      metaDescription?.setAttribute('content', article.value.excerpt);
     }
   } catch (err) {
     console.error('Error fetching article:', err);
-    error.value = 'Failed to load article. It may have been moved or deleted.';
+    error.value = 'Failed to load this note. It may have been moved or deleted.';
   } finally {
     loading.value = false;
   }
 };
 
-// Watch for route changes to load new articles when navigating between them
-watch(
-  () => route.params.id,
-  () => {
-    fetchArticle();
-  }
-);
+watch(() => route.fullPath, fetchArticle);
 
-// Fetch article when the component is mounted
 onMounted(() => {
   fetchArticle();
 });
 </script>
 
 <style lang="scss">
-// 文章视图样式
 .article-view {
-  background-color: #f9fafb;
   min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 5%, var(--color-accent-soft), transparent 18rem),
+    var(--color-bg);
 }
 
-// 加载状态
-.loading-container {
-  max-width: 56rem;
+.loading-container,
+.error-container,
+.article-container {
+  width: min(100% - 2rem, 920px);
   margin: 0 auto;
-  padding: 3rem 1rem;
+  padding: 4rem 0;
 }
 
-.loading-skeleton {
-  .skeleton-line {
-    background-color: #e5e7eb;
-    border-radius: 0.375rem;
-    height: 1rem;
-    margin-bottom: 1.5rem;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    
-    &.skeleton-title {
-      height: 2rem;
-      width: 75%;
-    }
-    
-    &.skeleton-subtitle {
-      height: 1rem;
-      width: 50%;
-      margin-bottom: 2rem;
-    }
-    
-    &.skeleton-line-5-6 {
-      width: 83.333333%;
-    }
-    
-    &.skeleton-line-2-3 {
-      width: 66.666667%;
-    }
+.loading-skeleton .skeleton-line {
+  height: 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--color-light-bg);
+  border-radius: var(--border-radius);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  &.skeleton-title {
+    height: 3rem;
+    width: 75%;
   }
-  
-  .skeleton-content {
-    .skeleton-line:not(:last-child) {
-      margin-bottom: 1rem;
-    }
+
+  &.skeleton-subtitle {
+    width: 50%;
+  }
+
+  &.skeleton-line-5-6 {
+    width: 83%;
+  }
+
+  &.skeleton-line-2-3 {
+    width: 66%;
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-// 错误状态
-.error-container {
-  max-width: 56rem;
-  margin: 0 auto;
-  padding: 3rem 1rem;
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 .error-alert {
-  background-color: #fef2f2;
-  border-left: 4px solid #f87171;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.error-content {
   display: flex;
-  
-  .error-icon {
-    flex-shrink: 0;
-    
-    svg {
-      height: 1.25rem;
-      width: 1.25rem;
-      color: #f87171;
-    }
-  }
-  
-  .error-message {
-    margin-left: 0.75rem;
-    
-    p {
-      font-size: 0.875rem;
-      color: #b91c1c;
-    }
-  }
-}
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.24);
+  border-radius: var(--border-radius-lg);
 
-.error-actions {
-  text-align: center;
-}
-
-// 文章容器
-.article-container {
-  max-width: 56rem;
-  margin: 0 auto;
-  padding: 3rem 1rem;
+  p {
+    margin: 0;
+  }
 }
 
 .article-header {
@@ -303,298 +220,238 @@ onMounted(() => {
 .article-meta {
   display: flex;
   align-items: center;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 1rem;
-  
-  .meta-separator {
-    margin: 0 0.5rem;
-  }
+  gap: 0.7rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.meta-separator {
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--color-accent);
 }
 
 .article-title {
-  font-size: 2.25rem;
-  font-weight: 800;
-  color: #111827;
-  margin-bottom: 1rem;
-  line-height: 1.2;
+  margin: 0;
+  color: var(--color-heading);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: 0;
 }
 
 .article-excerpt {
-  margin-top: 1rem;
-  font-size: 1.25rem;
-  color: #6b7280;
-  line-height: 1.6;
+  max-width: 760px;
+  margin: 1.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 1.22rem;
+  line-height: 1.7;
 }
 
 .featured-image-container {
-  margin-top: 2rem;
-  display: flex;
-  justify-content: center;
+  width: min(100%, 980px);
+  margin: 2.25rem auto 0;
+  overflow: hidden;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .featured-image {
-  border-radius: 0.5rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  height: auto;
+  display: block;
+  width: 100%;
+  max-height: min(58vh, 560px);
+  aspect-ratio: 16 / 9;
   object-fit: cover;
 }
 
-.article-footer {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.footer-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.footer-info {
-  display: flex;
-  align-items: center;
-  
-  .publish-date {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #111827;
-  }
-  
-  .update-date {
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-}
-
-.back-link {
-  color: #4f46e5;
-  font-weight: 500;
-  font-size: 0.875rem;
-  text-decoration: none;
-  transition: color 0.2s ease;
-  
-  &:hover {
-    color: #3730a3;
-    text-decoration: underline;
-  }
-}
-
-// 文章内容样式
 .article-content {
-  max-width: 88vw !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--color-text);
+  font-size: 1.06rem;
+  line-height: 1.78;
+}
+
+.article-content :deep(h1),
+.article-content :deep(h2),
+.article-content :deep(h3),
+.article-content :deep(h4) {
+  color: var(--color-heading);
+  line-height: 1.25;
 }
 
 .article-content :deep(h1) {
-  font-size: 1.875rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  margin-top: 2rem;
-  color: #111827;
+  margin: 2.5rem 0 1.25rem;
+  font-size: 2rem;
 }
 
 .article-content :deep(h2) {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  margin-top: 2rem;
-  color: #1f2937;
+  margin: 2.25rem 0 1rem;
+  font-size: 1.6rem;
 }
 
 .article-content :deep(h3) {
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin-bottom: 0.75rem;
-  margin-top: 1.5rem;
-  color: #1f2937;
+  margin: 1.8rem 0 0.75rem;
+  font-size: 1.3rem;
 }
 
-.article-content :deep(h4) {
-  font-size: 1.125rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  margin-top: 1rem;
-  color: #1f2937;
+.article-content :deep(p),
+.article-content :deep(ul),
+.article-content :deep(ol) {
+  margin-bottom: 1.45rem;
 }
 
-.article-content :deep(p) {
-  margin-bottom: 1.5rem;
-  line-height: 1.625;
-  color: #374151;
-  font-size: 1rem;
+.article-content :deep(p),
+.article-content :deep(li) {
+  color: var(--color-text);
 }
 
 .article-content :deep(a) {
-  color: #4f46e5;
-  text-decoration: underline;
-}
-
-.article-content :deep(a:hover) {
-  color: #3730a3;
-}
-
-.article-content :deep(ul),
-.article-content :deep(ol) {
-  margin-bottom: 1.5rem;
-  padding-left: 1.5rem;
-}
-
-.article-content :deep(ul) {
-  list-style-type: disc;
-}
-
-.article-content :deep(ol) {
-  list-style-type: decimal;
-}
-
-.article-content :deep(li) {
-  margin-bottom: 0.5rem;
+  color: var(--color-accent);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
 }
 
 .article-content :deep(blockquote) {
-  border-left: 4px solid #d1d5db;
-  padding-left: 1rem;
-  font-style: italic;
-  margin: 1.5rem 0;
-  color: #6b7280;
-  quotes: '\201C''\201D''\2018''\2019';
-}
-
-.article-content :deep(blockquote p) {
-  margin-bottom: 0;
+  margin: 1.75rem 0;
+  padding: 1rem 1.25rem;
+  color: var(--color-text-muted);
+  background: var(--color-accent-soft);
+  border-left: 4px solid var(--color-accent);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
 }
 
 .article-content :deep(img) {
-  margin: 2rem 0;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  display: block;
   width: 100%;
   height: auto;
-  max-height: 50vh;
-  object-fit: cover;
-}
-
-.article-content :deep(figure) {
+  max-height: 58vh;
   margin: 2rem 0;
-}
-
-.article-content :deep(figcaption) {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 0.5rem;
+  object-fit: cover;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .article-content :deep(table) {
   min-width: 100%;
+  margin: 2rem 0;
   border-collapse: separate;
   border-spacing: 0;
-  margin: 2rem 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.article-content :deep(th),
+.article-content :deep(td) {
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--color-border);
 }
 
 .article-content :deep(th) {
-  padding: 0.75rem 1.5rem;
-  background-color: #f9fafb;
+  color: var(--color-text-muted);
+  background: var(--color-light-bg);
   text-align: left;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #6b7280;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .article-content :deep(td) {
-  padding: 1rem 1.5rem;
-  white-space: normal;
-  font-size: 0.875rem;
-  color: #111827;
-  border-top: 1px solid #e5e7eb;
+  color: var(--color-text);
 }
 
-.article-content :deep(tr:nth-child(even)) {
-  background-color: #f9fafb;
-}
-
-.article-content :deep(tr:hover) {
-  background-color: #f3f4f6;
+.article-content :deep(tr:first-child th),
+.article-content :deep(tr:first-child td) {
+  border-top: 0;
 }
 
 .article-content :deep(code) {
-  background-color: #f3f4f6;
-  padding: 0.125rem 0.375rem;
+  padding: 0.15rem 0.35rem;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
   border-radius: 0.25rem;
-  font-size: 0.875rem;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-  color: #dc2626;
+  font-family: var(--font-family-mono);
+  font-size: 0.9em;
 }
 
 .article-content :deep(pre) {
-  background-color: #111827;
-  color: #f3f4f6;
+  margin: 1.75rem 0;
   padding: 1rem;
-  border-radius: 0.5rem;
-  margin: 1.5rem 0;
   overflow-x: auto;
-  font-size: 0.875rem;
-}
+  color: #e5edf4;
+  background: #0d1622;
+  border-radius: var(--border-radius-lg);
 
-.article-content :deep(pre code) {
-  background-color: transparent;
-  padding: 0;
-  color: #f3f4f6;
-}
-
-.article-content :deep(hr) {
-  margin: 2rem 0;
-  border-top: 1px solid #e5e7eb;
-}
-
-.article-content :deep(.table-container) {
-  overflow-x: auto;
-  margin-left: -1rem;
-  margin-right: -1rem;
-}
-
-@media (min-width: 640px) {
-  .article-content :deep(.table-container) {
-    margin-left: 0;
-    margin-right: 0;
+  code {
+    padding: 0;
+    color: inherit;
+    background: transparent;
   }
 }
 
-.article-content :deep(.responsive-table) {
-  min-width: 100%;
+.article-content :deep(hr) {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
 }
 
-/* Responsive images */
-.article-content :deep(p img) {
-  max-width: 100%;
-  height: auto;
+.article-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  max-width: 760px;
+  margin: 3rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
 }
 
-/* Lists */
-.article-content :deep(ul > li > ul) {
-  margin-top: 0.5rem;
-  margin-bottom: 0;
+.publish-date,
+.update-date {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
-.article-content :deep(ol > li > ol) {
-  margin-top: 0.5rem;
-  margin-bottom: 0;
+.publish-date {
+  color: var(--color-heading);
+  font-weight: 700;
 }
 
-/* Nested lists */
-.article-content :deep(ul ul, ol ul) {
-  padding-left: 1.5rem;
-  margin-top: 0.5rem;
+.update-date {
+  margin-top: 0.25rem;
+  color: var(--color-text-muted);
 }
 
-.article-content :deep(ol ol, ul ol) {
-  padding-left: 1.5rem;
-  margin-top: 0.5rem;
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-accent);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-accent-strong);
+  }
+}
+
+@media (max-width: 640px) {
+  .loading-container,
+  .error-container,
+  .article-container {
+    padding: 2.5rem 0;
+  }
+
+  .article-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 </style>
-

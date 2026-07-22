@@ -2,12 +2,13 @@
   <div class="password-auth-overlay">
     <div class="password-auth-modal">
       <div class="password-auth-header">
-        <h2>安全验证</h2>
+        <i class="fas fa-lock"></i>
+        <h2>Password Required</h2>
         <p class="password-auth-subtitle">
-          请输入口令以访问受保护的页面
+          Enter the 6-digit password to access protected notes.
         </p>
       </div>
-      
+
       <div class="password-auth-body">
         <div class="password-input-container">
           <input
@@ -15,55 +16,56 @@
             v-model="password"
             type="password"
             maxlength="6"
+            inputmode="numeric"
             class="password-input"
-            placeholder="请输入六位数字"
+            placeholder="000000"
             @input="onPasswordInput"
             @keyup.enter="handleSubmit"
             :disabled="isVerifying"
           />
-          <div class="password-dots">
-            <span 
-              v-for="i in 6" 
+          <div class="password-dots" aria-hidden="true">
+            <span
+              v-for="i in 6"
               :key="i"
-              :class="['password-dot', { 'filled': password.length >= i }]"
+              :class="['password-dot', { filled: password.length >= i }]"
             ></span>
           </div>
         </div>
-        
+
         <div v-if="errorMessage" class="error-message">
           <i class="fas fa-exclamation-circle"></i>
           {{ errorMessage }}
         </div>
-        
+
         <div class="password-auth-actions">
-          <button 
+          <button
             @click="handleSubmit"
             class="btn btn-primary"
             :disabled="password.length !== 6 || isVerifying"
           >
             <i v-if="isVerifying" class="fas fa-spinner fa-spin"></i>
             <i v-else class="fas fa-unlock"></i>
-            {{ isVerifying ? '验证中...' : '验证' }}
+            {{ isVerifying ? 'Verifying...' : 'Verify' }}
           </button>
-          
-          <button 
+
+          <button
             @click="handleClear"
             class="btn btn-outline-secondary"
             :disabled="isVerifying"
           >
             <i class="fas fa-eraser"></i>
-            清除
+            Clear
           </button>
         </div>
-        
+
         <div class="password-auth-footer">
-          <button 
+          <button
             @click="handleLogout"
             class="btn btn-link"
             :disabled="isVerifying"
           >
-            <i class="fas fa-sign-out-alt"></i>
-            退出
+            <i class="fas fa-arrow-left"></i>
+            Back home
           </button>
         </div>
       </div>
@@ -73,11 +75,9 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
 import { usePasswordAuth } from '@/composables/usePasswordAuth.js';
 
 const emit = defineEmits(['success', 'cancel']);
-
 const { verifyPassword, clearAllPasswords } = usePasswordAuth();
 
 const password = ref('');
@@ -85,70 +85,50 @@ const isVerifying = ref(false);
 const errorMessage = ref('');
 const passwordInput = ref(null);
 
-// 自动聚焦到输入框
 onMounted(() => {
-  nextTick(() => {
-    if (passwordInput.value) {
-      passwordInput.value.focus();
-    }
-  });
+  nextTick(() => passwordInput.value?.focus());
 });
 
-// 监听密码输入
 const onPasswordInput = () => {
-  // 只允许数字
   password.value = password.value.replace(/\D/g, '');
-  // 清除错误信息
   if (errorMessage.value) {
     errorMessage.value = '';
   }
 };
 
-// 处理提交
 const handleSubmit = async () => {
   if (password.value.length !== 6) {
-    errorMessage.value = '请输入完整的六位数字口令';
+    errorMessage.value = 'Enter the complete 6-digit password.';
     return;
   }
-  
+
   try {
     isVerifying.value = true;
     errorMessage.value = '';
-    
+
     const isValid = await verifyPassword(password.value);
-    
+
     if (isValid) {
       emit('success');
     } else {
-      errorMessage.value = '口令错误，请重新输入';
+      errorMessage.value = 'Incorrect password. Please try again.';
       password.value = '';
-      // 重新聚焦
-      nextTick(() => {
-        if (passwordInput.value) {
-          passwordInput.value.focus();
-        }
-      });
+      nextTick(() => passwordInput.value?.focus());
     }
   } catch (error) {
     console.error('Password verification error:', error);
-    errorMessage.value = '验证失败，请重试';
+    errorMessage.value = 'Verification failed. Please try again.';
   } finally {
     isVerifying.value = false;
   }
 };
 
-// 清除输入
 const handleClear = () => {
   password.value = '';
   errorMessage.value = '';
-  nextTick(() => {
-    if (passwordInput.value) {
-      passwordInput.value.focus();
-    }
-  });
+  nextTick(() => passwordInput.value?.focus());
 };
 
-// 退出
 const handleLogout = () => {
   clearAllPasswords();
   emit('cancel');
@@ -158,32 +138,30 @@ const handleLogout = () => {
 <style lang="scss" scoped>
 .password-auth-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  inset: 0;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  backdrop-filter: blur(4px);
+  padding: 1rem;
+  background: rgba(8, 17, 28, 0.72);
+  backdrop-filter: blur(10px);
 }
 
 .password-auth-modal {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  width: 90%;
-  max-width: 400px;
+  width: min(100%, 26rem);
   overflow: hidden;
-  animation: modalSlideIn 0.3s ease-out;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-soft);
+  animation: modalSlideIn 0.25s ease-out;
 }
 
 @keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: translateY(-12px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -192,54 +170,66 @@ const handleLogout = () => {
 }
 
 .password-auth-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   padding: 2rem;
   text-align: center;
-  
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
+
+  i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+    border-radius: 999px;
+  }
+
   h2 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
-  
-  .password-auth-subtitle {
     margin: 0;
-    opacity: 0.9;
-    font-size: 0.875rem;
+    color: var(--color-heading);
+    font-size: 1.45rem;
   }
+}
+
+.password-auth-subtitle {
+  margin: 0.55rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .password-auth-body {
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .password-input-container {
-  position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .password-input {
   width: 100%;
-  padding: 1rem;
-  font-size: 1.5rem;
+  padding: 0.9rem;
+  color: var(--color-heading);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-family: var(--font-family-mono);
+  font-size: 1.35rem;
+  letter-spacing: 0.45rem;
   text-align: center;
-  letter-spacing: 0.5rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background: #f9fafb;
-  transition: all 0.2s ease;
-  
+
   &:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
   }
-  
+
   &:disabled {
-    opacity: 0.6;
     cursor: not-allowed;
+    opacity: 0.6;
   }
 }
 
@@ -251,15 +241,13 @@ const handleLogout = () => {
 }
 
 .password-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  transition: all 0.2s ease;
-  
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: var(--color-light-bg);
+
   &.filled {
-    background: #667eea;
-    transform: scale(1.1);
+    background: var(--color-accent);
   }
 }
 
@@ -267,29 +255,25 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #ef4444;
-  font-size: 0.875rem;
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 0.375rem;
-  
-  i {
-    font-size: 0.75rem;
-  }
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.24);
+  border-radius: var(--border-radius);
+  font-size: 0.88rem;
 }
 
 .password-auth-actions {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .password-auth-footer {
-  text-align: center;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn {
@@ -297,66 +281,45 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
+  min-height: 2.65rem;
+  padding: 0.65rem 1rem;
   border: 1px solid transparent;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  
+  font-weight: 800;
+
   &:disabled {
-    opacity: 0.6;
     cursor: not-allowed;
-  }
-  
-  &-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    flex: 1;
-    
-    &:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-  }
-  
-  &-outline-secondary {
-    color: #6b7280;
-    border-color: #d1d5db;
-    background: transparent;
-    
-    &:hover:not(:disabled) {
-      background: #f9fafb;
-      color: #374151;
-    }
-  }
-  
-  &-link {
-    color: #6b7280;
-    background: transparent;
-    border: none;
-    padding: 0.5rem;
-    font-size: 0.875rem;
-    
-    &:hover:not(:disabled) {
-      color: #ef4444;
-    }
+    opacity: 0.6;
   }
 }
 
-// 响应式设计
+.btn-primary {
+  flex: 1;
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-outline-secondary {
+  color: var(--color-text);
+  background: transparent;
+  border-color: var(--color-border);
+}
+
+.btn-link {
+  min-height: 2rem;
+  padding: 0.4rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+
+  &:hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+}
+
 @media (max-width: 480px) {
-  .password-auth-modal {
-    margin: 1rem;
-    width: calc(100% - 2rem);
-  }
-  
-  .password-auth-header,
-  .password-auth-body {
-    padding: 1.5rem;
-  }
-  
   .password-auth-actions {
     flex-direction: column;
   }

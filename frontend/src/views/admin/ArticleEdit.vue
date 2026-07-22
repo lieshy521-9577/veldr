@@ -1,56 +1,56 @@
 <template>
   <div class="article-edit">
-    <div v-if="loading" class="text-center py-8">
+    <div v-if="loading" class="state-panel">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-    
+
     <template v-else>
       <div class="page-header">
-        <h1>Edit Article</h1>
-        <div class="actions">
-          <button 
-            @click="handleDelete" 
+        <div>
+          <h1>Edit Note</h1>
+          <p>Update the note content, status, and main image.</p>
+        </div>
+        <div class="header-actions">
+          <router-link to="/" class="btn btn-outline-secondary">
+            <i class="fas fa-home"></i>
+            Back to Home
+          </router-link>
+          <button
+            @click="handleDelete"
             class="btn btn-outline-danger"
             :disabled="isSubmitting"
           >
-            <i class="fas fa-trash"></i> Delete Article
+            <i class="fas fa-trash"></i>
+            Delete
           </button>
         </div>
       </div>
-      
-      <div class="card">
-        <div class="card-body">
-          <ArticleForm
-            ref="articleForm"
-            :article="article"
-            :is-editing="true"
-            @submit="updateArticle"
-          />
-        </div>
+
+      <div class="panel">
+        <ArticleForm
+          ref="articleForm"
+          :article="article"
+          :is-editing="true"
+          @submit="updateArticle"
+        />
       </div>
-      
-      <div class="card mt-4">
-        <div class="card-header">
-          <h3 class="card-title">Danger Zone</h3>
+
+      <section class="danger-panel">
+        <div>
+          <h2>Delete this note</h2>
+          <p>Once deleted, this note cannot be restored from the admin UI.</p>
         </div>
-        <div class="card-body">
-                  <div class="danger-zone-content">
-          <div class="danger-zone-info">
-            <h4 class="danger-zone-title">Delete this article</h4>
-            <p class="danger-zone-description">Once you delete an article, there is no going back. Please be certain.</p>
-          </div>
-            <button 
-              @click="handleDelete" 
-              class="btn btn-outline-danger"
-              :disabled="isSubmitting"
-            >
-              <i class="fas fa-trash"></i> Delete Article
-            </button>
-          </div>
-        </div>
-      </div>
+        <button
+          @click="handleDelete"
+          class="btn btn-outline-danger"
+          :disabled="isSubmitting"
+        >
+          <i class="fas fa-trash"></i>
+          Delete Note
+        </button>
+      </section>
     </template>
   </div>
 </template>
@@ -82,79 +82,60 @@ const loading = ref(true);
 const isSubmitting = ref(false);
 const articleForm = ref(null);
 
-// Fetch article data
 const fetchArticle = async () => {
   try {
     loading.value = true;
-    const articleData = await articleStore.fetchArticle(route.params.id, true); // admin = true
-    
-    if (articleData) {
-      article.value = {
-        id: String(articleData.id || ''),
-        title: String(articleData.title || ''),
-        slug: String(articleData.slug || ''),
-        content: String(articleData.content || ''),
-        excerpt: String(articleData.excerpt || ''),
-        status: String(articleData.status || 'draft'),
-        featuredImage: articleData.featuredImage || null,
-        featuredImageUrl: articleData.featuredImage ? `/uploads/${articleData.featuredImage}` : ''
-      };
-    } else {
-      throw new Error('Article not found');
+    const articleData = await articleStore.fetchArticle(route.params.id, true);
+
+    if (!articleData) {
+      throw new Error('Note not found');
     }
+
+    article.value = {
+      id: String(articleData.id || ''),
+      title: String(articleData.title || ''),
+      slug: String(articleData.slug || ''),
+      content: String(articleData.content || ''),
+      excerpt: String(articleData.excerpt || ''),
+      status: String(articleData.status || 'draft'),
+      featuredImage: articleData.featuredImage || null,
+      featuredImageUrl: articleData.featuredImage ? `/uploads/${articleData.featuredImage}` : ''
+    };
   } catch (error) {
-    console.error('Error fetching article:', error);
-    toast.error('Failed to load article');
+    console.error('Error fetching note:', error);
+    toast.error('Failed to load note');
     router.push({ name: 'ArticleList' });
   } finally {
     loading.value = false;
   }
 };
 
-// Update article
 const updateArticle = async (formData) => {
   isSubmitting.value = true;
-  
+
   try {
-    // For FormData, we need to extract values for comparison
     let formDataObj = {};
     if (formData instanceof FormData) {
-      for (let [key, value] of formData.entries()) {
+      for (const [key, value] of formData.entries()) {
         formDataObj[key] = value;
       }
     } else {
       formDataObj = formData;
     }
-    
-    // Check for changes
-    let hasChanges = false;
+
     const fieldsToCheck = ['title', 'slug', 'content', 'excerpt', 'status'];
-    
-    fieldsToCheck.forEach(key => {
-      const formValue = formDataObj[key];
-      const articleValue = article.value[key];
-      const isDifferent = formValue !== articleValue;
-      
-      if (isDifferent) {
-        hasChanges = true;
-      }
-    });
-    
-    if (formDataObj.featuredImage) {
-      hasChanges = true;
-    }
-    
-    if (!hasChanges && !formDataObj.featuredImage) {
+    const hasFieldChanges = fieldsToCheck.some(key => formDataObj[key] !== article.value[key]);
+    const hasImageChange = Boolean(formDataObj.featuredImage);
+
+    if (!hasFieldChanges && !hasImageChange) {
       toast.info('No changes detected');
       isSubmitting.value = false;
       return;
     }
-    
-    // Use store to update article
+
     const updatedArticle = await articleStore.updateArticleData(route.params.id, formData);
-    
+
     if (updatedArticle) {
-      // Update local article data
       article.value = {
         ...article.value,
         id: String(updatedArticle.id || article.value.id),
@@ -164,143 +145,160 @@ const updateArticle = async (formData) => {
         excerpt: String(updatedArticle.excerpt || article.value.excerpt),
         status: String(updatedArticle.status || article.value.status),
         featuredImage: updatedArticle.featuredImage || article.value.featuredImage,
-        featuredImageUrl: updatedArticle.featuredImage 
-          ? `/uploads/${updatedArticle.featuredImage}` 
+        featuredImageUrl: updatedArticle.featuredImage
+          ? `/uploads/${updatedArticle.featuredImage}`
           : article.value.featuredImageUrl
       };
-      
-      toast.success('Article updated successfully!');
+
+      toast.success('Note updated');
     }
   } catch (error) {
-    console.error('Error updating article:', error);
-    
-    // 显示具体的验证错误信息
+    console.error('Error updating note:', error);
+
     if (error.message && error.message.includes('Validation error')) {
-      // 解析验证错误信息
-      const errorMessages = error.message.split(',').map(msg => msg.trim());
-      const titleError = errorMessages.find(msg => msg.includes('Title must be between 3 and 255'));
-      const slugError = errorMessages.find(msg => msg.includes('Slug'));
-      
-      if (titleError) {
-        alert('请输入长度三位以上的文章名');
-      } else if (slugError) {
-        alert('文章别名不能为空，且只能包含小写字母、数字和连字符');
+      if (error.message.includes('Title')) {
+        alert('Please enter a note title with at least 3 characters.');
+      } else if (error.message.includes('Slug')) {
+        alert('Slug can contain only lowercase letters, numbers, and hyphens.');
       } else {
-        alert('请检查表单填写是否正确');
+        alert('Please check the form and try again.');
       }
     } else {
-      toast.error(error.message || 'Failed to update article');
+      toast.error(error.message || 'Failed to update note');
     }
   } finally {
     isSubmitting.value = false;
-    // Reset ArticleForm's isSubmitting state
-    if (articleForm.value && articleForm.value.resetSubmittingState) {
-      articleForm.value.resetSubmittingState();
-    }
+    articleForm.value?.resetSubmittingState?.();
   }
 };
 
-// Delete article
 const handleDelete = async () => {
-  if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
-    return;
-  }
-  
+  if (!confirm('Delete this note? This action cannot be undone.')) return;
+
   isSubmitting.value = true;
-  
+
   try {
     await articleStore.deleteArticleData(route.params.id);
-    toast.success('Article deleted successfully!');
+    toast.success('Note deleted');
     router.push({ name: 'ArticleList' });
   } catch (error) {
-    console.error('Error deleting article:', error);
-    toast.error(error.message || 'Failed to delete article');
+    console.error('Error deleting note:', error);
+    toast.error(error.message || 'Failed to delete note');
   } finally {
     isSubmitting.value = false;
   }
 };
 
-// Fetch article data when component mounts
-onMounted(() => {
-  fetchArticle();
-});
+onMounted(fetchArticle);
 </script>
 
 <style lang="scss" scoped>
-.page-header {
+.page-header,
+.danger-panel {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.page-header {
   margin-bottom: 1.5rem;
-  
+
   h1 {
     margin: 0;
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #2c3e50;
+    color: var(--color-heading);
+    font-size: 2rem;
+    line-height: 1.1;
+  }
+
+  p {
+    margin: 0.45rem 0 0;
+    color: var(--color-text-muted);
   }
 }
 
-.card {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  
-  &-header {
-    padding: 1rem 1.5rem;
-    background-color: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    
-    .card-title {
-      margin: 0;
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #1f2937;
-    }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.panel,
+.danger-panel,
+.state-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.panel {
+  padding: 1.5rem;
+}
+
+.danger-panel {
+  margin-top: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-color: rgba(239, 68, 68, 0.32);
+  background: rgba(239, 68, 68, 0.06);
+
+  h2 {
+    margin: 0;
+    color: var(--color-heading);
+    font-size: 1.1rem;
   }
-  
-  &-body {
-    padding: 1.5rem;
+
+  p {
+    margin: 0.35rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
   }
+}
+
+.state-panel {
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
-  font-weight: 500;
-  line-height: 1.5;
-  color: #374151;
-  text-align: center;
-  text-decoration: none;
-  vertical-align: middle;
-  cursor: pointer;
-  user-select: none;
-  background-color: transparent;
+  gap: 0.5rem;
+  min-height: 2.45rem;
+  padding: 0.6rem 1rem;
   border: 1px solid transparent;
-  border-radius: 0.375rem;
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, 
-              border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  
-  &-outline-danger {
-    color: #ef4444;
-    border-color: #ef4444;
-    background: transparent;
-    
-    &:hover {
-      background-color: #fef2f2;
-    }
-    
-    &:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-    }
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 800;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
   }
-  
-  i {
-    margin-right: 0.5rem;
+}
+
+.btn-outline-danger {
+  color: var(--color-danger);
+  background: transparent;
+  border-color: rgba(239, 68, 68, 0.35);
+
+  &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.08);
+  }
+}
+
+.btn-outline-secondary {
+  color: var(--color-text);
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent-strong);
   }
 }
 
@@ -319,6 +317,8 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
+.text-primary { color: var(--color-accent); }
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -331,65 +331,16 @@ onMounted(() => {
   border: 0;
 }
 
-.mt-4 {
-  margin-top: 1rem;
-}
+@media (max-width: 720px) {
+  .page-header,
+  .danger-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 
-.flex {
-  display: flex;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.text-muted {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
-.py-8 {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-primary {
-  color: #3b82f6;
-}
-
-// Danger Zone styles
-.danger-zone-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.danger-zone-info {
-  flex: 1;
-}
-
-.danger-zone-title {
-  font-weight: 500;
-  margin: 0 0 0.25rem 0;
-  color: #1f2937;
-}
-
-.danger-zone-description {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin: 0;
+  .header-actions,
+  .header-actions .btn {
+    width: 100%;
+  }
 }
 </style>

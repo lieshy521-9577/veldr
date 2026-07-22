@@ -1,108 +1,110 @@
-// Default theme styles
 @use '../variables' as *;
 
 :root {
-  // CSS 自定义属性，与 SCSS 变量配合使用
   --color-primary: #{$primary-color};
   --color-secondary: #{$secondary-color};
   --color-success: #{$success-color};
   --color-danger: #{$danger-color};
   --color-warning: #{$warning-color};
   --color-info: #{$info-color};
-  
   --color-text: #{$text-color};
   --color-text-muted: #{$text-muted};
   --color-heading: #{$heading-color};
   --color-border: #{$border-color};
-  --color-bg: #{$bg-color};
-  --color-light-bg: #{$light-bg};
-  
+  --color-bg: #f7f8f6;
+  --color-light-bg: #eef3f4;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #f4f7f8;
+  --color-hero-bg: #fbfaf7;
+  --color-text-inverse: #ffffff;
+  --color-accent: #087f95;
+  --color-accent-strong: #05667a;
+  --color-accent-soft: rgba(8, 127, 149, 0.1);
+  --color-accent-border: rgba(8, 127, 149, 0.28);
+  --color-focus-ring: rgba(8, 127, 149, 0.22);
+  --color-nav-bg: rgba(255, 255, 255, 0.92);
+  --color-sidebar-bg: #102333;
+  --color-sidebar-hover: rgba(255, 255, 255, 0.1);
+  --color-sidebar-active: #087f95;
   --font-family-sans: #{$font-family-sans-serif};
   --font-family-mono: #{$font-family-monospace};
-  
-  --border-radius: #{$border-radius};
-  --border-radius-sm: #{$border-radius-sm};
-  --border-radius-lg: #{$border-radius-lg};
-  
+  --border-radius: 0.375rem;
+  --border-radius-sm: 0.25rem;
+  --border-radius-lg: 0.5rem;
+  --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.08);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 30px rgba(15, 23, 42, 0.06);
   --box-shadow: #{$box-shadow};
   --box-shadow-md: #{$box-shadow-md};
   --box-shadow-lg: #{$box-shadow-lg};
   --box-shadow-xl: #{$box-shadow-xl};
-  
   --transition-base: #{$transition-base};
   --transition-fade: #{$transition-fade};
   --transition-collapse: #{$transition-collapse};
 }
 
-// 主题变量映射
-.theme-default {
-  // 颜色主题
-  --primary: var(--color-primary);
+html[data-accent='rose'] {
+  --color-accent: #c23b58;
+  --color-accent-strong: #9f2f47;
+  --color-accent-soft: rgba(194, 59, 88, 0.11);
+  --color-accent-border: rgba(194, 59, 88, 0.3);
+  --color-focus-ring: rgba(194, 59, 88, 0.22);
+  --color-sidebar-active: #c23b58;
+}
+
+html[data-accent='amber'] {
+  --color-accent: #b76d16;
+  --color-accent-strong: #935510;
+  --color-accent-soft: rgba(183, 109, 22, 0.12);
+  --color-accent-border: rgba(183, 109, 22, 0.32);
+  --color-focus-ring: rgba(183, 109, 22, 0.24);
+  --color-sidebar-active: #b76d16;
+}
+
+html[data-accent='ink'] {
+  --color-accent: #1e293b;
+  --color-accent-strong: #0f172a;
+  --color-accent-soft: rgba(30, 41, 59, 0.1);
+  --color-accent-border: rgba(30, 41, 59, 0.26);
+  --color-focus-ring: rgba(30, 41, 59, 0.2);
+  --color-sidebar-active: #334155;
+}
+
+html[data-theme='dark'] {
+  --color-text: #d8e1e8;
+  --color-text-muted: #97a6b5;
+  --color-heading: #f8fafc;
+  --color-border: #273749;
+  --color-bg: #0e1723;
+  --color-light-bg: #162232;
+  --color-surface: #121d2b;
+  --color-surface-elevated: #172638;
+  --color-surface-muted: #102033;
+  --color-hero-bg: #0c1520;
+  --color-nav-bg: rgba(14, 23, 35, 0.9);
+  --color-sidebar-bg: #08111c;
+  --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.34);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 42px rgba(0, 0, 0, 0.22);
+}
+
+.theme-default,
+html {
+  --primary: var(--color-accent);
   --secondary: var(--color-secondary);
   --success: var(--color-success);
   --danger: var(--color-danger);
   --warning: var(--color-warning);
   --info: var(--color-info);
-  
-  // 文本颜色
   --text-primary: var(--color-text);
   --text-secondary: var(--color-text-muted);
   --text-heading: var(--color-heading);
-  
-  // 背景颜色
   --bg-primary: var(--color-bg);
   --bg-secondary: var(--color-light-bg);
-  --bg-white: #ffffff;
-  
-  // 边框颜色
+  --bg-white: var(--color-surface);
   --border-primary: var(--color-border);
-  --border-secondary: #e5e7eb;
-  
-  // 阴影
+  --border-secondary: var(--color-border);
   --shadow-sm: var(--box-shadow);
   --shadow-md: var(--box-shadow-md);
   --shadow-lg: var(--box-shadow-lg);
   --shadow-xl: var(--box-shadow-xl);
-}
-
-// 深色主题支持
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-text: #f3f4f6;
-    --color-text-muted: #9ca3af;
-    --color-heading: #ffffff;
-    --color-border: #374151;
-    --color-bg: #111827;
-    --color-light-bg: #1f2937;
-  }
-}
-
-// 主题切换类
-.theme-dark {
-  --color-text: #f3f4f6;
-  --color-text-muted: #9ca3af;
-  --color-heading: #ffffff;
-  --color-border: #374151;
-  --color-bg: #111827;
-  --color-light-bg: #1f2937;
-  
-  .bg-white {
-    background-color: var(--color-light-bg);
-  }
-  
-  .text-gray-900 {
-    color: var(--color-heading);
-  }
-  
-  .text-gray-700 {
-    color: var(--color-text);
-  }
-  
-  .text-gray-500 {
-    color: var(--color-text-muted);
-  }
-  
-  .border-gray-200 {
-    border-color: var(--color-border);
-  }
 }

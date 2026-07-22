@@ -8,7 +8,7 @@
           @input="handleSearch"
           @keydown.enter="performSearch"
           type="text"
-          placeholder="Search articles..."
+          placeholder="Search notes..."
           class="search-input"
         />
         <button
@@ -33,7 +33,7 @@
     <!-- Search Results Dropdown -->
     <div v-if="showResults && searchResults.length > 0" class="search-results">
       <div class="search-results-header">
-        <span class="results-count">{{ searchResults.length }} result(s) found</span>
+        <span class="results-count">{{ searchResults.length }} note(s) found</span>
         <button @click="closeResults" class="close-results">
           <i class="fas fa-times"></i>
         </button>
@@ -63,10 +63,10 @@
     <div v-if="showResults && searchResults.length === 0 && hasSearched" class="no-results">
       <div class="no-results-content">
         <i class="fas fa-search no-results-icon"></i>
-        <h3>No articles found</h3>
-        <p>Try adjusting your search terms or browse all articles.</p>
+        <h3>No notes found</h3>
+        <p>Try adjusting your search terms or browse all notes.</p>
         <button @click="viewAllArticles" class="btn btn-outline-primary">
-          View All Articles
+          View All Notes
         </button>
       </div>
     </div>
@@ -227,7 +227,7 @@ onUnmounted(() => {
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: $text-muted;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
 }
 
@@ -236,20 +236,20 @@ onUnmounted(() => {
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   font-size: 1rem;
   line-height: 1.5;
-  color: $text-color;
-  background-color: white;
-  border: 2px solid $border-color;
-  border-radius: 0.5rem;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
   transition: all 0.2s ease;
   
   &:focus {
     outline: none;
-    border-color: $primary-color;
-    box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
   }
   
   &::placeholder {
-    color: $text-muted;
+    color: var(--color-text-muted);
   }
 }
 
@@ -260,15 +260,15 @@ onUnmounted(() => {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: $text-muted;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 50%;
   transition: all 0.2s ease;
   
   &:hover {
-    color: $text-color;
-    background-color: $light-bg;
+    color: var(--color-text);
+    background-color: var(--color-light-bg);
   }
 }
 
@@ -276,15 +276,15 @@ onUnmounted(() => {
   padding: 0.75rem 1.5rem;
   font-weight: 500;
   color: white;
-  background-color: $primary-color;
-  border: 2px solid $primary-color;
-  border-radius: 0.5rem;
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--border-radius);
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover:not(:disabled) {
-    background-color: color.adjust($primary-color, $lightness: -10%);
-    border-color: color.adjust($primary-color, $lightness: -10%);
+    background-color: var(--color-accent-strong);
+    border-color: var(--color-accent-strong);
   }
   
   &:disabled {
@@ -298,11 +298,11 @@ onUnmounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 2px solid $border-color;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-top: none;
   border-radius: 0 0 0.5rem 0.5rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   z-index: 1000;
   max-height: 400px;
   overflow-y: auto;
@@ -313,28 +313,28 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: $light-bg;
-  border-bottom: 1px solid $border-color;
+  background-color: var(--color-light-bg);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .results-count {
   font-size: 0.875rem;
-  color: $text-muted;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
 .close-results {
   background: none;
   border: none;
-  color: $text-muted;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 50%;
   transition: all 0.2s ease;
   
   &:hover {
-    color: $text-color;
-    background-color: rgba($text-color, 0.1);
+    color: var(--color-text);
+    background-color: var(--color-accent-soft);
   }
 }
 
@@ -345,12 +345,12 @@ onUnmounted(() => {
 
 .search-result-item {
   padding: 1rem;
-  border-bottom: 1px solid $border-color;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: background-color 0.2s ease;
   
   &:hover {
-    background-color: $light-bg;
+    background-color: var(--color-light-bg);
   }
   
   &:last-child {
@@ -360,13 +360,13 @@ onUnmounted(() => {
 
 .result-title {
   font-weight: 600;
-  color: $heading-color;
+  color: var(--color-heading);
   margin-bottom: 0.5rem;
   line-height: 1.4;
 }
 
 .result-excerpt {
-  color: $text-muted;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
   line-height: 1.5;
   margin-bottom: 0.75rem;
@@ -380,7 +380,7 @@ onUnmounted(() => {
 }
 
 .result-date {
-  color: $text-muted;
+  color: var(--color-text-muted);
 }
 
 .result-status {
@@ -390,13 +390,13 @@ onUnmounted(() => {
   text-transform: uppercase;
   
   &.status-published {
-    background-color: rgba($success-color, 0.1);
-    color: $success-color;
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-success);
   }
   
   &.status-draft {
-    background-color: rgba($warning-color, 0.1);
-    color: $warning-color;
+    background-color: rgba(245, 158, 11, 0.12);
+    color: var(--color-warning);
   }
 }
 
@@ -405,11 +405,11 @@ onUnmounted(() => {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 2px solid $border-color;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-top: none;
   border-radius: 0 0 0.5rem 0.5rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   z-index: 1000;
 }
 
@@ -419,18 +419,18 @@ onUnmounted(() => {
   
   .no-results-icon {
     font-size: 2rem;
-    color: $text-muted;
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
   }
   
   h3 {
     font-size: 1.125rem;
-    color: $heading-color;
+    color: var(--color-heading);
     margin-bottom: 0.5rem;
   }
   
   p {
-    color: $text-muted;
+    color: var(--color-text-muted);
     margin-bottom: 1.5rem;
   }
 }
@@ -442,21 +442,21 @@ onUnmounted(() => {
   padding: 0.5rem 1rem;
   font-weight: 500;
   line-height: 1.5;
-  color: $primary-color;
+  color: var(--color-accent);
   text-align: center;
   text-decoration: none;
   vertical-align: middle;
   cursor: pointer;
   user-select: none;
   background-color: transparent;
-  border: 1px solid $primary-color;
-  border-radius: 0.375rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--border-radius);
   transition: all 0.15s ease-in-out;
   
   &-outline-primary {
     &:hover {
-      background-color: rgba($primary-color, 0.1);
-      color: $primary-color;
+      background-color: var(--color-accent-soft);
+      color: var(--color-accent);
     }
   }
 }

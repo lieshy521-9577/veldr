@@ -6,7 +6,7 @@ const routes = [
     name: 'Home',
     component: () => import('@/views/DemoView.vue'),
     meta: {
-      title: 'Specms',
+      title: 'Veldr',
       requiresAuth: false,
       layout: 'default'
     }
@@ -15,7 +15,7 @@ const routes = [
     path: '/admin',
     component: () => import('@/layouts/AdminLayout.vue'),
     meta: {
-      title: 'Admin Panel',
+      title: 'Write | Veldr',
       requiresAuth: true,
       requiresPassword: true,
       layout: 'admin'
@@ -26,7 +26,7 @@ const routes = [
         name: 'ArticleList',
         component: () => import('@/views/admin/ArticleList.vue'),
         meta: {
-          title: 'Articles | Admin',
+          title: 'Notes | Veldr',
           requiresAuth: true,
           requiresPassword: true,
           layout: 'admin'
@@ -37,7 +37,7 @@ const routes = [
         name: 'ArticleCreate',
         component: () => import('@/views/admin/ArticleCreate.vue'),
         meta: {
-          title: 'Create Article | Admin',
+          title: 'New Note | Veldr',
           requiresAuth: true,
           requiresPassword: true,
           layout: 'admin'
@@ -49,7 +49,7 @@ const routes = [
         component: () => import('@/views/admin/ArticleEdit.vue'),
         props: true,
         meta: {
-          title: 'Edit Article | Admin',
+          title: 'Edit Note | Veldr',
           requiresAuth: true,
           requiresPassword: true,
           layout: 'admin'
@@ -63,7 +63,7 @@ const routes = [
     component: () => import('@/views/ArticleView.vue'),
     props: true,
     meta: {
-      title: 'Article | Specms',
+      title: 'Note | Veldr',
       requiresAuth: false,
       layout: 'default'
     }
@@ -74,7 +74,7 @@ const routes = [
     component: () => import('@/views/ArticleView.vue'),
     props: true,
     meta: {
-      title: 'Article | Specms',
+      title: 'Note | Veldr',
       requiresAuth: false,
       layout: 'default'
     }
@@ -84,7 +84,7 @@ const routes = [
     name: 'PrivateArticles',
     component: () => import('@/views/PrivateArticles.vue'),
     meta: {
-      title: 'Private Articles | Specms',
+      title: 'Private Notes | Veldr',
       requiresAuth: false,
       requiresPassword: true,
       layout: 'default'
@@ -131,7 +131,7 @@ const router = createRouter({
 // Global navigation guards
 router.beforeEach((to, from, next) => {
   // Set document title
-  document.title = to.meta?.title || 'Specms';
+  document.title = to.meta?.title || 'Veldr';
   
   // Check if route requires password verification
   if (to.meta?.requiresPassword) {
