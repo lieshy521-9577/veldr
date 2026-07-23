@@ -1,5 +1,5 @@
 param(
-  [string]$ServerHost = "8.159.128.180",
+  [string[]]$Servers = @("8.159.128.180"),
   [string]$ServerUser = "root",
   [string]$SshKey = "",
   [string]$RemoteVeldrPath = "/var/www/veldr",
@@ -7,26 +7,44 @@ param(
   [string]$CmsApiBase = "/api/cms",
   [string]$CmsUploadBase = "/uploads/cms",
   [switch]$Deploy,
-  [switch]$SkipBuild
+  [switch]$SkipBuild,
+  [switch]$KeepPackages
 )
 
 $ErrorActionPreference = "Stop"
 
-$RepoRoot = Split-Path -Parent $PSScriptRoot
-$FrontendDir = Join-Path $RepoRoot "frontend"
-$CmsFrontendDir = Join-Path $RepoRoot "cms-frontend"
-$ArtifactDir = Join-Path $RepoRoot "artifacts"
-$Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$frontendPath = Join-Path $repoRoot "frontend"
+$cmsFrontendPath = Join-Path $repoRoot "cms-frontend"
 
-function Invoke-Step {
+$packages = @(
+  @{
+    Name = "veldr"
+    ProjectPath = $frontendPath
+    RemotePath = $RemoteVeldrPath
+    Archive = "veldr-dist.tgz"
+  },
+  @{
+    Name = "cms"
+    ProjectPath = $cmsFrontendPath
+    RemotePath = $RemoteCmsPath
+    Archive = "veldr-cms-dist.tgz"
+  }
+)
+
+function Invoke-Checked {
   param(
     [string]$Title,
-    [scriptblock]$Action
+    [scriptblock]$Script
   )
 
   Write-Host ""
   Write-Host "==> $Title" -ForegroundColor Cyan
-  & $Action
+  $global:LASTEXITCODE = $null
+  & $Script
+  if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+  }
 }
 
 function Assert-Command {
@@ -34,6 +52,14 @@ function Assert-Command {
   if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
     throw "Required command not found: $Name"
   }
+}
+
+function Get-Target {
+  param([string]$Server)
+  if ($Server -match "@") {
+    return $Server
+  }
+  return "${ServerUser}@${Server}"
 }
 
 function Quote-Sh {
@@ -46,123 +72,139 @@ function ConvertTo-JsString {
   return ($Value -replace "\\", "\\") -replace "'", "\'"
 }
 
-function Build-Frontend {
-  param([string]$Path)
+function Invoke-InProject {
+  param(
+    [string]$Path,
+    [scriptblock]$Script
+  )
+
   Push-Location $Path
   try {
-    npm run build
+    & $Script
   }
   finally {
     Pop-Location
   }
 }
 
-function New-ZipFromDist {
+function New-DistArchive {
   param(
-    [string]$DistPath,
-    [string]$ZipPath
+    [hashtable]$Package
   )
 
-  if (-not (Test-Path -LiteralPath $DistPath)) {
-    throw "Missing dist folder: $DistPath"
-  }
+  Invoke-InProject $Package.ProjectPath {
+    if (-not (Test-Path -LiteralPath "dist")) {
+      throw "Missing dist folder in $($Package.ProjectPath)"
+    }
 
-  if (Test-Path -LiteralPath $ZipPath) {
-    Remove-Item -LiteralPath $ZipPath -Force
-  }
+    if (Test-Path -LiteralPath $Package.Archive) {
+      Remove-Item -LiteralPath $Package.Archive -Force
+    }
 
-  Compress-Archive -Path (Join-Path $DistPath "*") -DestinationPath $ZipPath -Force
+    tar -czf $Package.Archive --exclude="dist/logs" dist
+  }
+}
+
+function Remove-LocalArchive {
+  param([hashtable]$Package)
+  $archivePath = Join-Path $Package.ProjectPath $Package.Archive
+  if (Test-Path -LiteralPath $archivePath) {
+    Remove-Item -LiteralPath $archivePath -Force
+  }
 }
 
 Assert-Command "npm"
-
-Invoke-Step "Preparing artifact folder" {
-  New-Item -ItemType Directory -Force -Path $ArtifactDir | Out-Null
-}
+Assert-Command "tar"
 
 if (-not $SkipBuild) {
-  Invoke-Step "Building Veldr frontend" {
-    Build-Frontend $FrontendDir
+  Invoke-Checked "Building Veldr frontend" {
+    Invoke-InProject $frontendPath {
+      npm run build
+    }
   }
 
-  Invoke-Step "Building CMS frontend" {
-    Build-Frontend $CmsFrontendDir
+  Invoke-Checked "Building CMS frontend" {
+    Invoke-InProject $cmsFrontendPath {
+      npm run build
+    }
   }
 }
 
-Invoke-Step "Writing CMS runtime config" {
-  $ConfigPath = Join-Path $CmsFrontendDir "dist\config.js"
-  $Api = ConvertTo-JsString $CmsApiBase
-  $Upload = ConvertTo-JsString $CmsUploadBase
+Invoke-Checked "Writing CMS runtime config" {
+  $configPath = Join-Path $cmsFrontendPath "dist\config.js"
+  $api = ConvertTo-JsString $CmsApiBase
+  $upload = ConvertTo-JsString $CmsUploadBase
   @"
 window.CMS_CONFIG = {
-  apiBase: '$Api',
-  uploadBase: '$Upload'
+  apiBase: '$api',
+  uploadBase: '$upload'
 };
-"@ | Set-Content -LiteralPath $ConfigPath -Encoding UTF8
-  Write-Host "CMS config: $ConfigPath"
+"@ | Set-Content -LiteralPath $configPath -Encoding UTF8
 }
 
-$VeldrZip = Join-Path $ArtifactDir "veldr-frontend-$Stamp.zip"
-$CmsZip = Join-Path $ArtifactDir "veldr-cms-frontend-$Stamp.zip"
-
-Invoke-Step "Packing Veldr frontend" {
-  New-ZipFromDist -DistPath (Join-Path $FrontendDir "dist") -ZipPath $VeldrZip
-  Write-Host $VeldrZip
-}
-
-Invoke-Step "Packing CMS frontend" {
-  New-ZipFromDist -DistPath (Join-Path $CmsFrontendDir "dist") -ZipPath $CmsZip
-  Write-Host $CmsZip
+foreach ($package in $packages) {
+  Invoke-Checked "Packing $($package.Name) frontend" {
+    New-DistArchive $package
+  }
 }
 
 if (-not $Deploy) {
   Write-Host ""
-  Write-Host "Build artifacts are ready." -ForegroundColor Green
-  Write-Host "Run again with -Deploy to upload to $ServerUser@$ServerHost."
+  Write-Host "Build packages are ready:" -ForegroundColor Green
+  foreach ($package in $packages) {
+    Write-Host "  $(Join-Path $package.ProjectPath $package.Archive)"
+  }
+  Write-Host ""
+  Write-Host "Run with -Deploy to upload to: $($Servers -join ', ')"
   exit 0
 }
 
-Assert-Command "ssh"
 Assert-Command "scp"
+Assert-Command "ssh"
 
-$SshArgs = @()
+$sshArgs = @()
 if ($SshKey) {
-  $SshArgs += @("-i", $SshKey)
+  $sshArgs += @("-i", $SshKey)
 }
 
-$Target = "$ServerUser@$ServerHost"
-$RemoteTmp = "/tmp/veldr-frontends-$Stamp"
-$RemoteVeldrRelease = "$RemoteVeldrPath/releases/$Stamp"
-$RemoteCmsRelease = "$RemoteCmsPath/releases/$Stamp"
+foreach ($server in $Servers) {
+  $target = Get-Target $server
 
-Invoke-Step "Creating remote release folders on $Target" {
-  $Command = @(
-    "set -e",
-    "command -v unzip >/dev/null 2>&1 || { echo 'unzip is required on the server'; exit 1; }",
-    "mkdir -p $(Quote-Sh $RemoteTmp) $(Quote-Sh $RemoteVeldrRelease) $(Quote-Sh $RemoteCmsRelease)"
-  ) -join "; "
-  & ssh @SshArgs $Target $Command
+  foreach ($package in $packages) {
+    $archivePath = Join-Path $package.ProjectPath $package.Archive
+    $remotePath = $package.RemotePath
+
+    Invoke-Checked "Ensuring remote path for $($package.Name) on $target" {
+      $remoteCommand = "mkdir -p $(Quote-Sh $remotePath)"
+      & ssh @sshArgs $target $remoteCommand
+    }
+
+    Invoke-Checked "Uploading $($package.Archive) to $target" {
+      & scp @sshArgs $archivePath "${target}:${remotePath}/$($package.Archive)"
+    }
+
+    $remoteCommand = @(
+      "set -e",
+      "cd $(Quote-Sh $remotePath)",
+      "rm -rf dist-logs-temp",
+      "BACKUP=`$(date +%Y%m%d-%H%M%S)",
+      "if [ -d dist ]; then if [ -d dist/logs ]; then mv dist/logs dist-logs-temp; fi; mv dist dist-`$BACKUP; fi",
+      "tar -xzf $(Quote-Sh $package.Archive)",
+      "rm $(Quote-Sh $package.Archive)",
+      "if [ -d dist-logs-temp ]; then mkdir -p dist; mv dist-logs-temp dist/logs; fi"
+    ) -join " && "
+
+    Invoke-Checked "Activating $($package.Name) frontend on $target" {
+      & ssh @sshArgs $target $remoteCommand
+    }
+  }
 }
 
-Invoke-Step "Uploading frontend archives" {
-  & scp @SshArgs $VeldrZip "${Target}:${RemoteTmp}/veldr-frontend.zip"
-  & scp @SshArgs $CmsZip "${Target}:${RemoteTmp}/veldr-cms-frontend.zip"
-}
-
-Invoke-Step "Activating remote release" {
-  $Command = @(
-    "set -e",
-    "unzip -oq $(Quote-Sh "$RemoteTmp/veldr-frontend.zip") -d $(Quote-Sh $RemoteVeldrRelease)",
-    "unzip -oq $(Quote-Sh "$RemoteTmp/veldr-cms-frontend.zip") -d $(Quote-Sh $RemoteCmsRelease)",
-    "ln -sfn $(Quote-Sh $RemoteVeldrRelease) $(Quote-Sh "$RemoteVeldrPath/current")",
-    "ln -sfn $(Quote-Sh $RemoteCmsRelease) $(Quote-Sh "$RemoteCmsPath/current")",
-    "rm -rf $(Quote-Sh $RemoteTmp)"
-  ) -join "; "
-  & ssh @SshArgs $Target $Command
+if (-not $KeepPackages) {
+  foreach ($package in $packages) {
+    Remove-LocalArchive $package
+  }
 }
 
 Write-Host ""
-Write-Host "Deployment complete." -ForegroundColor Green
-Write-Host "Veldr frontend current: $RemoteVeldrPath/current"
-Write-Host "CMS frontend current:   $RemoteCmsPath/current"
+Write-Host "Frontend deployment complete." -ForegroundColor Green

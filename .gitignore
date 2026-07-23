@@ -17,6 +17,7 @@ public/data/*.json
 
 # Deployment archives and local environment settings
 backend/public.zip
+*.tgz
 **/.env
 **/.env.*
 !**/.env.example
