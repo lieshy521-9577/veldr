@@ -222,18 +222,25 @@ const App = {
     }
   },
 
+  enterViewerMode() {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(ACCESS_KEY_STORAGE);
+    this.accessKey = null;
+    this.role = 'viewer';
+    this.hideLogin();
+    this.applyRoleUI();
+    this.renderMenus();
+    this.renderTags();
+    this.updateCounts();
+    this.renderNotes();
+  },
+
   logout() {
     if (this.role !== 'editor') {
       this.showLogin();
       return;
     }
 
-    if (typeof localStorage !== 'undefined') localStorage.removeItem(ACCESS_KEY_STORAGE);
-    this.accessKey = null;
-    this.role = 'viewer';
-    this.applyRoleUI();
-    this.renderMenus();
-    this.renderNotes();
+    this.enterViewerMode();
     this.toast('已退出编辑模式');
   },
 
@@ -260,6 +267,8 @@ const App = {
   hideLogin() {
     const el = document.getElementById('loginOverlay');
     if (el) el.classList.remove('login-overlay--active');
+    const input = document.getElementById('loginKey');
+    if (input) input.value = '';
   },
 
   applyRoleUI() {

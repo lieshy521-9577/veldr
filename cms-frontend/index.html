@@ -345,6 +345,8 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .login-card__input:focus{border-color:var(--a500);box-shadow:0 0 0 3px rgb(34 197 94/.12)}
 .login-card__btn{width:100%;padding:var(--s3);font-size:.9375rem;font-weight:500;font-family:var(--font-sans);color:#fff;background:var(--a600);border:none;border-radius:9px;cursor:pointer;transition:all .15s var(--ease)}
 .login-card__btn:hover{background:var(--a700)}
+.login-card__btn--ghost{margin-top:var(--s3);color:var(--c600);background:var(--c100);border:1px solid var(--c200)}
+.login-card__btn--ghost:hover{background:var(--c200);color:var(--c900)}
 .login-card__hint{font-size:.75rem;color:var(--c400);margin-top:var(--s5);line-height:1.6}
 .topnav__role{font-size:.75rem;font-weight:500;padding:var(--s1) var(--s3);border-radius:999px;white-space:nowrap}
 .topnav__role--editor{color:var(--a700);background:var(--a50)}
@@ -498,6 +500,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
       <input type="password" class="login-card__input" id="loginKey" placeholder="输入编辑密码…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();App.submitLogin()}">
     </div>
     <button class="login-card__btn" onclick="App.submitLogin()">进入</button>
+    <button class="login-card__btn login-card__btn--ghost" onclick="App.enterViewerMode()">继续查看</button>
     <p class="login-card__hint">无需密码即可浏览；编辑密码可新建、上传、修改和删除</p>
   </div>
 </div>
