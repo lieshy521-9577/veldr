@@ -29,7 +29,10 @@
 
       <div class="nav-actions">
         <div class="theme-control" aria-label="Theme controls">
-          <span class="theme-label">Theme</span>
+          <span class="theme-label">
+            <i class="fas fa-palette"></i>
+            <span>Theme</span>
+          </span>
           <div class="theme-swatches">
             <button
               v-for="option in accentOptions"
@@ -43,7 +46,7 @@
             ></button>
           </div>
           <button
-            class="mode-toggle"
+            class="mode-toggle theme-icon-button"
             type="button"
             :title="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
             :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
@@ -64,10 +67,10 @@
         </div>
 
         <div v-if="isAuthenticated" class="auth-actions">
-          <router-link to="/password-settings" class="auth-link" title="Password settings">
+          <router-link to="/password-settings" class="auth-link theme-icon-button" title="Password settings">
             <i class="fas fa-key"></i>
           </router-link>
-          <button @click="handleLogout" class="auth-link" title="Log out">
+          <button @click="handleLogout" class="auth-link theme-icon-button" title="Log out">
             <i class="fas fa-sign-out-alt"></i>
           </button>
         </div>
@@ -217,33 +220,48 @@ const handleLogout = async () => {
 .nav-actions {
   flex-shrink: 0;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
 .theme-control {
-  gap: 0.55rem;
-  padding: 0 0.75rem;
-  border-left: 1px solid var(--color-border);
-  border-right: 1px solid var(--color-border);
+  gap: 0.5rem;
+  min-height: 2.35rem;
+  padding: 0.26rem 0.34rem 0.26rem 0.58rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0)),
+    var(--color-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .theme-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-right: 0.15rem;
   font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--color-text-muted);
+
+  i {
+    color: var(--color-accent);
+    font-size: 0.78rem;
+  }
 }
 
 .theme-swatches {
-  gap: 0.35rem;
+  gap: 0.32rem;
 }
 
 .theme-swatch,
-.mode-toggle,
-.auth-link {
+.theme-icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 1.82rem;
+  height: 1.82rem;
   border-radius: 999px;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
@@ -260,18 +278,35 @@ const handleLogout = async () => {
 
 .theme-swatch {
   position: relative;
+  border-color: color-mix(in srgb, var(--swatch-color) 36%, var(--color-border));
+  background: color-mix(in srgb, var(--swatch-color) 10%, var(--color-surface));
 
   &::before {
     content: '';
-    width: 0.95rem;
-    height: 0.95rem;
+    width: 1.12rem;
+    height: 1.12rem;
     border-radius: 999px;
     background: var(--swatch-color);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 1px 2px rgba(15, 23, 42, 0.16);
   }
 
   &.active {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-focus-ring);
+    border-color: var(--swatch-color);
+    background: color-mix(in srgb, var(--swatch-color) 16%, var(--color-surface));
+    box-shadow:
+      0 0 0 2px var(--color-nav-bg),
+      0 0 0 4px color-mix(in srgb, var(--swatch-color) 88%, transparent);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0.47rem;
+      border-radius: 999px;
+      border: 1.5px solid rgba(255, 255, 255, 0.78);
+      pointer-events: none;
+    }
   }
 
   &--teal { --swatch-color: #087f95; }
@@ -280,13 +315,20 @@ const handleLogout = async () => {
   &--ink { --swatch-color: #1e293b; }
 }
 
+.mode-toggle {
+  margin-left: 0.08rem;
+  box-shadow: -0.5rem 0 0 -0.46rem var(--color-border);
+}
+
 .auth-status {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   max-width: 7rem;
-  padding: 0.45rem 0.65rem;
-  border-radius: var(--border-radius);
+  min-height: 2.2rem;
+  padding: 0.45rem 0.72rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 700;
   white-space: nowrap;
@@ -299,6 +341,7 @@ const handleLogout = async () => {
   &:not(.authenticated) {
     color: var(--color-danger);
     background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.14);
   }
 
   &.clickable {
@@ -369,6 +412,8 @@ const handleLogout = async () => {
   .theme-control {
     padding: 0;
     border: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .theme-swatches {
