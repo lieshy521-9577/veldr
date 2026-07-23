@@ -3,6 +3,7 @@
 frontend/dist/
 cms-frontend/dist/
 frontend/.vercel/
+artifacts/
 
 # Runtime state and user-generated media
 backend/temp/
