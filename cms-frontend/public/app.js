@@ -870,6 +870,7 @@ const App = {
 };
 
 // ===== 启动 =====
+window.App = App;
 document.addEventListener('DOMContentLoaded', () => App.init());
 
 // 键盘快捷键
