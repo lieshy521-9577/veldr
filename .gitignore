@@ -21,6 +21,7 @@ backend/public.zip
 **/.env
 **/.env.*
 !**/.env.example
+**/.veldr-backend.env.upload
 
 # OS/editor files
 .DS_Store

@@ -19,6 +19,7 @@ $backendPath = Join-Path $repoRoot "backend"
 $servicePath = Join-Path $repoRoot "deploy\systemd\veldr-backend.service"
 $archiveName = "veldr-backend.tgz"
 $archivePath = Join-Path $backendPath $archiveName
+$uploadEnvPath = Join-Path $backendPath ".veldr-backend.env.upload"
 
 function Invoke-Checked {
   param(
@@ -103,6 +104,10 @@ if ($UploadEnv) {
   if (-not (Test-Path -LiteralPath $resolvedEnvFile)) {
     throw "Env file not found: $resolvedEnvFile"
   }
+
+  $envContent = Get-Content -LiteralPath $resolvedEnvFile -Raw
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($uploadEnvPath, $envContent, $utf8NoBom)
 }
 
 Invoke-Checked "Testing backend" {
@@ -121,8 +126,10 @@ Invoke-Checked "Packing backend" {
       --exclude="node_modules" `
       --exclude="public/data" `
       --exclude="public/uploads" `
+      --exclude="public.zip" `
       --exclude="temp" `
       --exclude="*.tgz" `
+      --exclude="*-backup-*" `
       --exclude=".env" `
       --exclude=".env.*" `
       .
@@ -163,7 +170,7 @@ foreach ($server in $Servers) {
 
   if ($UploadEnv) {
     Invoke-Checked "Uploading backend env to $target" {
-      & scp @sshArgs $resolvedEnvFile "${target}:${remoteParent}/veldr-backend.env"
+      & scp @sshArgs $uploadEnvPath "${target}:${remoteParent}/veldr-backend.env"
     }
   }
 
@@ -211,6 +218,10 @@ foreach ($server in $Servers) {
 
 if (-not $KeepPackage) {
   Remove-LocalArchive
+}
+
+if (Test-Path -LiteralPath $uploadEnvPath) {
+  Remove-Item -LiteralPath $uploadEnvPath -Force
 }
 
 Write-Host ""
