@@ -5,6 +5,10 @@ dotenv.config();
 const env = (key, fallback) => process.env[key] ?? fallback;
 const nodeEnv = env('NODE_ENV', 'development');
 const jwtSecret = process.env.JWT_SECRET || (nodeEnv === 'production' ? null : 'veldr-dev-secret-change-me');
+const listEnv = (key, fallback) => env(key, fallback)
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
 
 if (!jwtSecret) {
   throw new Error('JWT_SECRET must be set in production');
@@ -22,7 +26,7 @@ export const config = {
   uploadDir: env('UPLOAD_DIR', 'public/uploads'),
   tempDir: env('TEMP_DIR', 'temp'),
   cors: {
-    origin: env('CORS_ORIGIN', 'http://localhost:5173'),
+    origin: listEnv('CORS_ORIGIN', 'http://localhost:5173,http://localhost:5174'),
   },
   auth: {
     jwtSecret,

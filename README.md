@@ -19,6 +19,7 @@ The backend can also host the lightweight CMS/knowledge-base API from `github-cm
 veldr/
 ├─ backend/              # Express API, SQLite data, uploads, cleanup scripts
 ├─ frontend/             # Vue 3 + Vite admin and reader UI
+├── cms-frontend/         # Standalone NoteFlow-style CMS frontend
 ├─ public/               # Legacy/static assets kept from the original project
 ├─ .gitignore
 └─ README.md
@@ -57,6 +58,21 @@ Frontend default URL:
 http://127.0.0.1:5173
 ```
 
+Start the standalone CMS frontend:
+
+```bash
+cd cms-frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+CMS frontend default URL:
+
+```text
+http://127.0.0.1:5174
+```
+
 ## Environment
 
 Backend:
@@ -90,6 +106,15 @@ Frontend:
 | `VITE_UPLOAD_BASE_URL` | `http://localhost:5000/uploads` | Upload file base URL |
 | `VITE_TINYMCE_API_KEY` | empty | Optional TinyMCE Cloud API key |
 
+CMS frontend:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `VITE_CMS_FRONTEND_PORT` | `5174` | CMS Vite dev server port |
+| `VITE_BACKEND_BASE_URL` | `http://localhost:5000` | Dev proxy target for the unified backend |
+| `VITE_CMS_API_BASE` | `/api/cms` | Runtime CMS API base used by `public/config.js` |
+| `VITE_CMS_UPLOAD_BASE` | `/uploads/cms` | Runtime CMS upload base used by `public/config.js` |
+
 ## Production Configuration
 
 Before running Veldr in production:
@@ -99,9 +124,10 @@ Before running Veldr in production:
 - Set a strong random `JWT_SECRET`; the backend refuses to start in production without it.
 - Set `CORS_ORIGIN` to the exact frontend origin, for example `https://notes.example.com`.
 - Set `VITE_API_BASE_URL` and `VITE_UPLOAD_BASE_URL` to the public backend URLs used by the deployed frontend.
+- For `cms-frontend`, keep same-origin proxying for `/api/cms` and `/uploads/cms`, or replace `public/config.js` during deployment with the public unified backend URLs.
 - Keep `backend/public/data/`, `backend/public/uploads/`, and `backend/temp/` writable by the backend process.
 - Serve the frontend and backend over HTTPS so the auth cookie can use `secure: true`.
-- For a separate `github-cms` frontend, proxy its `/api/*` requests to `/api/cms/*` on this backend, and its `/uploads/*` requests to `/uploads/cms/*`.
+- For a separate CMS frontend, proxy its `/api/cms/*` and `/uploads/cms/*` requests to this backend.
 
 Example production backend environment:
 
@@ -131,7 +157,9 @@ Veldr media: /uploads/*
 CMS media:   /uploads/cms/*
 ```
 
-Veldr data remains in SQLite. CMS data remains JSON-based for simple migration from `github-cms`; copy the existing `github-cms/data/db.json` into the configured `CMS_DATA_DIR` to reuse existing notes.
+Veldr data remains in SQLite. CMS data remains JSON-based for simple migration from `cms` or legacy `github-cms`; copy `data/db.json` into the configured `CMS_DATA_DIR` to reuse existing notes.
+
+The checked-in `cms-frontend` is based on the standalone NoteFlow CMS UI. It keeps the original knowledge-base strengths: searchable note cards, category/tag filters, favorites, Markdown preview, image insertion, editable top menus, keyboard shortcuts, and detail-page table of contents. Its backend calls are adapted to the unified Veldr namespace.
 
 ## Password Notes
 
@@ -178,6 +206,9 @@ npm test
 npm run build
 
 cd ../frontend
+npm run build
+
+cd ../cms-frontend
 npm run build
 ```
 

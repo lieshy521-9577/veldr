@@ -35,6 +35,10 @@ router.use(attachAuthState);
 
 router.post('/auth', authenticateCms);
 
+router.get('/me', requireViewer, (req, res) => {
+  send(res, 200, { role: req.cmsRole });
+});
+
 router.get('/notes', requireViewer, async (req, res) => {
   const db = await loadDB();
   let notes = [...db.notes];

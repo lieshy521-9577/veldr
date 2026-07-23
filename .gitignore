@@ -1,6 +1,7 @@
 # Dependencies and generated frontend assets
 **/node_modules/
 frontend/dist/
+cms-frontend/dist/
 frontend/.vercel/
 
 # Runtime state and user-generated media
