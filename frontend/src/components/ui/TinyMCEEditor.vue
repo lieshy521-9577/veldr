@@ -127,6 +127,7 @@ const uploadImage = (file, progress) => new Promise((resolve, reject) => {
 
   const xhr = new XMLHttpRequest();
   xhr.open('POST', props.uploadUrl);
+  xhr.withCredentials = true;
   xhr.timeout = 30000;
 
   xhr.upload.addEventListener('progress', (event) => {

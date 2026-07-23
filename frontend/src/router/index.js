@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { apiFetch } from '@/utils/apiClient.js';
 
 const routes = [
   {
@@ -128,16 +129,34 @@ const router = createRouter({
   routes
 });
 
+const clearAuthState = () => {
+  localStorage.removeItem('cms_authenticated');
+  localStorage.removeItem('cms_token');
+  window.dispatchEvent(new CustomEvent('authStateChanged'));
+};
+
+const verifyServerAuth = async () => {
+  if (localStorage.getItem('cms_authenticated') !== 'true') return false;
+
+  try {
+    const response = await apiFetch('/api/password/info');
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
 // Global navigation guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // Set document title
   document.title = to.meta?.title || 'Veldr';
   
   // Check if route requires password verification
   if (to.meta?.requiresPassword) {
-    const isAuthenticated = localStorage.getItem('cms_authenticated') === 'true';
+    const isAuthenticated = await verifyServerAuth();
     
     if (!isAuthenticated) {
+      clearAuthState();
       // Redirect to password verification
       next({
         name: 'PasswordVerification',

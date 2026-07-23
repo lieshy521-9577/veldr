@@ -4,15 +4,7 @@
  */
 
 import { buildApiUrl } from '@/utils/urlHelper';
-
-// Helper function to handle API responses
-const handleResponse = async (response) => {
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Network error' }));
-    throw new Error(error.message || `HTTP ${response.status}`);
-  }
-  return response.json();
-};
+import { apiFetch, parseApiResponse } from '@/utils/apiClient.js';
 
 // Helper function to build query string
 const buildQueryString = (params) => {
@@ -35,8 +27,8 @@ export const articleApi = {
     const queryString = buildQueryString(params);
     const url = buildApiUrl(`/articles${queryString ? `?${queryString}` : ''}`);
     
-    const response = await fetch(url);
-    return handleResponse(response);
+    const response = await apiFetch(url);
+    return parseApiResponse(response);
   },
 
   /**
@@ -47,8 +39,8 @@ export const articleApi = {
    */
   async getArticle(id, admin = false) {
     const url = admin ? buildApiUrl(`/articles/${id}?admin=true`) : buildApiUrl(`/articles/${id}`);
-    const response = await fetch(url);
-    return handleResponse(response);
+    const response = await apiFetch(url);
+    return parseApiResponse(response);
   },
 
   /**
@@ -57,8 +49,8 @@ export const articleApi = {
    * @returns {Promise<Object>} Article data
    */
   async getArticleBySlug(slug) {
-    const response = await fetch(buildApiUrl(`/articles/slug/${slug}`));
-    return handleResponse(response);
+    const response = await apiFetch(buildApiUrl(`/articles/slug/${slug}`));
+    return parseApiResponse(response);
   },
 
   /**
@@ -71,12 +63,12 @@ export const articleApi = {
     const body = isFormData ? data : JSON.stringify(data);
     const headers = isFormData ? {} : { 'Content-Type': 'application/json' };
 
-    const response = await fetch(buildApiUrl('/articles'), {
+    const response = await apiFetch(buildApiUrl('/articles'), {
       method: 'POST',
       headers,
       body
     });
-    return handleResponse(response);
+    return parseApiResponse(response);
   },
 
   /**
@@ -90,12 +82,12 @@ export const articleApi = {
     const body = isFormData ? data : JSON.stringify(data);
     const headers = isFormData ? {} : { 'Content-Type': 'application/json' };
 
-    const response = await fetch(buildApiUrl(`/articles/${id}`), {
+    const response = await apiFetch(buildApiUrl(`/articles/${id}`), {
       method: 'PUT',
       headers,
       body
     });
-    return handleResponse(response);
+    return parseApiResponse(response);
   },
 
   /**
@@ -105,14 +97,14 @@ export const articleApi = {
    * @returns {Promise<Object>} Updated article
    */
   async updateArticleStatus(id, status) {
-    const response = await fetch(buildApiUrl(`/articles/${id}/status`), {
+    const response = await apiFetch(buildApiUrl(`/articles/${id}/status`), {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ status })
     });
-    return handleResponse(response);
+    return parseApiResponse(response);
   },
 
   /**
@@ -121,10 +113,10 @@ export const articleApi = {
    * @returns {Promise<Object>} Deletion result
    */
   async deleteArticle(id) {
-    const response = await fetch(buildApiUrl(`/articles/${id}`), {
+    const response = await apiFetch(buildApiUrl(`/articles/${id}`), {
       method: 'DELETE'
     });
-    return handleResponse(response);
+    return parseApiResponse(response);
   },
 
   /**
@@ -151,11 +143,11 @@ export const articleApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(buildApiUrl('/upload'), {
+    const response = await apiFetch(buildApiUrl('/upload'), {
       method: 'POST',
       body: formData
     });
-    return handleResponse(response);
+    return parseApiResponse(response);
   },
 
   /**
@@ -167,11 +159,11 @@ export const articleApi = {
     const formData = new FormData();
     formData.append('croppedImage', file);
 
-    const response = await fetch(buildApiUrl('/upload/cropped'), {
+    const response = await apiFetch(buildApiUrl('/upload/cropped'), {
       method: 'POST',
       body: formData
     });
-    return handleResponse(response);
+    return parseApiResponse(response);
   }
 };
 

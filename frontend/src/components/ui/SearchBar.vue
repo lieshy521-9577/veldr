@@ -77,6 +77,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { format } from 'date-fns';
+import { apiFetch } from '@/utils/apiClient.js';
 
 const router = useRouter();
 
@@ -125,7 +126,7 @@ const performSearch = async () => {
   }
   
   try {
-    const response = await fetch(`/api/articles?search=${encodeURIComponent(searchQuery.value)}&status=published`);
+    const response = await apiFetch(`/api/articles?search=${encodeURIComponent(searchQuery.value)}&status=published`);
     
     if (!response.ok) {
       throw new Error('Search failed');

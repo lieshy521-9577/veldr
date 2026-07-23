@@ -105,9 +105,9 @@ const handleAuthClick = () => {
   });
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
   if (confirm('Log out of this writing session?')) {
-    logout();
+    await logout();
     router.push('/');
   }
 };

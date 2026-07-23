@@ -9,6 +9,7 @@ backend/public/uploads/
 backend/public/backups/
 backend/public/data/*.sqlite
 backend/public/data/*.json
+backend/public/data/cms/
 public/data/*.sqlite
 public/data/*.json
 

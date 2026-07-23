@@ -6,7 +6,9 @@ import methodOverride from 'method-override';
 import { sequelize } from './config/databases.js';
 import apiRoutes from './routes/index.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { config } from './config/index.js';
+import { cmsUploads } from './modules/cms/cmsUploads.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,10 +22,12 @@ app.use(express.json({ limit: '20mb' })); // 增加JSON限制以支持更大的�
 app.use(express.urlencoded({ extended: true, limit: '20mb' })); // 增加URL编码限制
 app.use(methodOverride('_method'));
 app.use(morgan('dev'));
-app.use(cors({ origin: config.cors.origin }));
+app.use(cors({ origin: config.cors.origin, credentials: true }));
+app.use(cookieParser());
 
 // Static folders
 // app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads/cms', cmsUploads);
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // API Routes

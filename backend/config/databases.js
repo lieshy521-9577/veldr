@@ -20,7 +20,7 @@ export const databases = {
   // 安全数据库 - 存储密码、令牌等安全相关数据
   security: new Sequelize({
     dialect: 'sqlite',
-    storage: path.resolve(__dirname, '../public/data/security.sqlite'),
+    storage: path.resolve(__dirname, '../', config.db.securityStorage),
     logging: config.db.logging,
     dialectModule: sqlite3
   })

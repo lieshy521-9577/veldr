@@ -1,272 +1,247 @@
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import Password from '../models/Password.js';
-import { securitySequelize } from '../config/databases.js';
-import { config } from '../config/index.js';
+import { setAuthCookie, clearAuthCookie } from '../middleware/auth.js';
 
-// 默认口令（从环境变量读取）
 const DEFAULT_PASSWORD = process.env.DEFAULT_PASSWORD || '123456';
+const BCRYPT_ROUNDS = 12;
 
-// 获取当前口令（从数据库）
-const getCurrentPassword = async () => {
-  try {
-    const passwordRecord = await Password.findOne({
-      where: { type: 'default' }
-    });
-    
-    if (passwordRecord) {
-      return passwordRecord.password;
-    } else {
-      // 如果数据库中没有记录，创建默认口令
-      await Password.create({
-        type: 'default',
-        password: DEFAULT_PASSWORD,
-        isDefault: true
-      });
-      return DEFAULT_PASSWORD;
-    }
-  } catch (error) {
-    console.error('Error getting current password:', error);
-    return DEFAULT_PASSWORD;
-  }
+const isSixDigitPassword = (password) => /^\d{6}$/.test(String(password || ''));
+const isBcryptHash = (value) => /^\$2[aby]\$\d{2}\$/.test(String(value || ''));
+
+const hashPassword = (password) => bcrypt.hash(password, BCRYPT_ROUNDS);
+
+const findPasswordRecord = () => Password.findOne({
+  where: { type: 'default' },
+});
+
+const createPasswordRecord = async (password = DEFAULT_PASSWORD) => Password.create({
+  type: 'default',
+  password: await hashPassword(password),
+  isDefault: password === DEFAULT_PASSWORD,
+  lastModified: new Date(),
+});
+
+const getOrCreatePasswordRecord = async () => {
+  const passwordRecord = await findPasswordRecord();
+  if (passwordRecord) return passwordRecord;
+  return createPasswordRecord();
 };
 
-// 更新口令到数据库
 const updatePasswordInDB = async (newPassword) => {
-  try {
-    const [passwordRecord, created] = await Password.upsert({
-      type: 'default',
-      password: newPassword,
-      isDefault: newPassword === DEFAULT_PASSWORD,
-      lastModified: new Date()
-    });
-    
-    return passwordRecord;
-  } catch (error) {
-    console.error('Error updating password in database:', error);
-    throw error;
-  }
+  const hashedPassword = await hashPassword(newPassword);
+  const [passwordRecord] = await Password.upsert({
+    type: 'default',
+    password: hashedPassword,
+    isDefault: newPassword === DEFAULT_PASSWORD,
+    lastModified: new Date(),
+  });
+
+  return passwordRecord;
 };
 
-/**
- * 验证口令
- */
+const verifyAgainstStoredPassword = async (password, passwordRecord) => {
+  const storedPassword = String(passwordRecord.password || '');
+
+  if (isBcryptHash(storedPassword)) {
+    return bcrypt.compare(password, storedPassword);
+  }
+
+  const isLegacyMatch = password === storedPassword;
+  if (isLegacyMatch) {
+    await updatePasswordInDB(password);
+  }
+  return isLegacyMatch;
+};
+
+const passwordInfoFromRecord = (passwordRecord) => ({
+  isSet: Boolean(passwordRecord),
+  length: 6,
+  isDefault: Boolean(passwordRecord?.isDefault),
+  lastModified: passwordRecord?.lastModified || null,
+});
+
 const verifyPassword = async (req, res) => {
   try {
     const { password } = req.body;
-    
-    // 验证参数
+
     if (!password) {
       return res.status(400).json({
         success: false,
-        message: 'Password is required'
+        message: 'Password is required',
       });
     }
-    
-    // 验证口令格式
-    if (!/^\d{6}$/.test(password)) {
+
+    if (!isSixDigitPassword(password)) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be 6 digits'
+        message: 'Password must be 6 digits',
       });
     }
-    
-    // 从数据库获取当前口令
-    const currentPassword = await getCurrentPassword();
-    
-    // 验证口令
-    const isValid = password === currentPassword;
-    
-    if (isValid) {
-      // 生成认证令牌（可选，用于额外的安全验证）
-      const token = crypto.randomBytes(32).toString('hex');
-      
-      res.json({
-        success: true,
-        message: 'Password verified successfully',
-        token: token
-      });
-    } else {
-      res.status(401).json({
+
+    const passwordRecord = await getOrCreatePasswordRecord();
+    const isValid = await verifyAgainstStoredPassword(password, passwordRecord);
+
+    if (!isValid) {
+      return res.status(401).json({
         success: false,
-        message: 'Invalid password'
+        message: 'Invalid password',
       });
     }
+
+    setAuthCookie(res);
+    return res.json({
+      success: true,
+      message: 'Password verified successfully',
+    });
   } catch (error) {
     console.error('Password verification error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
 
-/**
- * 获取当前口令信息（不返回实际口令）
- */
+const logout = async (req, res) => {
+  clearAuthCookie(res);
+  return res.json({
+    success: true,
+    message: 'Logged out',
+  });
+};
+
 const getPasswordInfo = async (req, res) => {
   try {
-    const passwordRecord = await Password.findOne({
-      where: { type: 'default' }
+    const passwordRecord = await getOrCreatePasswordRecord();
+
+    return res.json({
+      success: true,
+      data: passwordInfoFromRecord(passwordRecord),
     });
-    
-    if (passwordRecord) {
-      res.json({
-        success: true,
-        data: {
-          isSet: true,
-          length: passwordRecord.password.length,
-          isDefault: passwordRecord.isDefault,
-          lastModified: passwordRecord.lastModified,
-          password: passwordRecord.password // 返回实际口令值
-        }
-      });
-    } else {
-      // 如果数据库中没有记录，返回默认值
-      res.json({
-        success: true,
-        data: {
-          isSet: false,
-          length: 0,
-          isDefault: true,
-          lastModified: null,
-          password: DEFAULT_PASSWORD
-        }
-      });
-    }
   } catch (error) {
     console.error('Get password info error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
 
-/**
- * 更新口令
- */
 const updatePassword = async (req, res) => {
   try {
     const { password } = req.body;
-    
-    // 验证参数
+
     if (!password) {
       return res.status(400).json({
         success: false,
-        message: 'Password is required'
+        message: 'Password is required',
       });
     }
-    
-    // 验证口令格式
-    if (!/^\d{6}$/.test(password)) {
+
+    if (!isSixDigitPassword(password)) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be 6 digits'
+        message: 'Password must be 6 digits',
       });
     }
-    
-    // 更新口令到数据库
+
     await updatePasswordInDB(password);
-    
-    res.json({
+    clearAuthCookie(res);
+
+    return res.json({
       success: true,
-      message: 'Password updated successfully'
+      message: 'Password updated successfully',
     });
   } catch (error) {
     console.error('Update password error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
 
-/**
- * 重置口令为默认值
- */
 const resetPassword = async (req, res) => {
   try {
-    // 重置口令到数据库
     await updatePasswordInDB(DEFAULT_PASSWORD);
-    
-    res.json({
+    clearAuthCookie(res);
+
+    return res.json({
       success: true,
-      message: 'Password reset to default'
+      message: 'Password reset to default',
     });
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
 
-/**
- * 清除所有口令（重置为默认值）
- */
 const clearAllPasswords = async (req, res) => {
   try {
-    // 重置口令为默认值
     await updatePasswordInDB(DEFAULT_PASSWORD);
-    
-    res.json({
+    clearAuthCookie(res);
+
+    return res.json({
       success: true,
-      message: 'Password reset to default value'
+      message: 'Password reset to default value',
     });
   } catch (error) {
     console.error('Clear password error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
 };
 
-/**
- * 初始化口令（首次设置）
- */
 const initializePasswords = async (req, res) => {
   try {
     const { password } = req.body;
-    
-    // 验证参数
+
     if (!password) {
       return res.status(400).json({
         success: false,
-        message: 'Password is required'
+        message: 'Password is required',
       });
     }
-    
-    // 验证口令格式
-    if (!/^\d{6}$/.test(password)) {
+
+    if (!isSixDigitPassword(password)) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be 6 digits'
+        message: 'Password must be 6 digits',
       });
     }
-    
-    // 设置口令到数据库
+
     await updatePasswordInDB(password);
-    
-    res.json({
+    clearAuthCookie(res);
+
+    return res.json({
       success: true,
-      message: 'Password initialized successfully'
+      message: 'Password initialized successfully',
     });
   } catch (error) {
     console.error('Initialize password error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
     });
   }
+};
+
+export {
+  getOrCreatePasswordRecord,
+  verifyAgainstStoredPassword,
 };
 
 export default {
   verifyPassword,
+  logout,
   getPasswordInfo,
   updatePassword,
   resetPassword,
   clearAllPasswords,
-  initializePasswords
+  initializePasswords,
 };

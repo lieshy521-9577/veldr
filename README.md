@@ -3,6 +3,7 @@
 Veldr is a personal note writing system with a Vue/Vite frontend and an Express + SQLite backend.
 
 This repository has been reorganized as a full-stack project. It is intended for private writing, image-heavy notes, drafts, and personal article management.
+The backend can also host the lightweight CMS/knowledge-base API from `github-cms` under a separate namespace, so one Node process can serve multiple frontends with isolated data stores.
 
 ## Current Positioning
 
@@ -30,6 +31,7 @@ Start the backend:
 ```bash
 cd backend
 npm install
+cp .env.example .env
 npm start
 ```
 
@@ -45,6 +47,7 @@ Start the frontend:
 ```bash
 cd frontend
 npm install
+cp .env.example .env
 npm run dev
 ```
 
@@ -63,8 +66,20 @@ Backend:
 | `PORT` | `5000` | Backend listening port |
 | `DB_DIALECT` | `sqlite` | Database dialect |
 | `DB_STORAGE` | `public/data/cms.sqlite` | Main SQLite database |
+| `SECURITY_DB_STORAGE` | `public/data/security.sqlite` | Password/auth SQLite database |
 | `DB_LOGGING` | `false` | Sequelize query logging |
 | `DEFAULT_PASSWORD` | `123456` | Initial password value when no security DB exists |
+| `JWT_SECRET` | development fallback | Secret used to sign admin auth JWTs |
+| `JWT_EXPIRES_IN` | `12h` | Auth session lifetime |
+| `AUTH_COOKIE_NAME` | `veldr_auth` | HttpOnly auth cookie name |
+| `AUTH_COOKIE_MAX_AGE_MS` | `43200000` | Auth cookie lifetime in milliseconds |
+| `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin |
+| `CMS_DATA_DIR` | `public/data/cms` | JSON data directory for the CMS module |
+| `CMS_DB_FILE` | `db.json` | CMS JSON database filename |
+| `CMS_SECRET_FILE` | `secret.json` | CMS generated editor secret filename |
+| `CMS_UPLOAD_DIR` | `public/uploads/cms` | CMS upload directory |
+| `CMS_VIEWER_PASSWORD` | `11` | CMS read-only access key |
+| `CMS_EDITOR_PASSWORD` | generated if empty | CMS editor access key |
 
 Frontend:
 
@@ -73,6 +88,50 @@ Frontend:
 | `VITE_FRONTEND_PORT` | `5173` | Vite dev server port |
 | `VITE_API_BASE_URL` | `http://localhost:5000/api` | API base URL |
 | `VITE_UPLOAD_BASE_URL` | `http://localhost:5000/uploads` | Upload file base URL |
+| `VITE_TINYMCE_API_KEY` | empty | Optional TinyMCE Cloud API key |
+
+## Production Configuration
+
+Before running Veldr in production:
+
+- Use Node 20 LTS. The repository includes `.nvmrc`.
+- Set `NODE_ENV=production`.
+- Set a strong random `JWT_SECRET`; the backend refuses to start in production without it.
+- Set `CORS_ORIGIN` to the exact frontend origin, for example `https://notes.example.com`.
+- Set `VITE_API_BASE_URL` and `VITE_UPLOAD_BASE_URL` to the public backend URLs used by the deployed frontend.
+- Keep `backend/public/data/`, `backend/public/uploads/`, and `backend/temp/` writable by the backend process.
+- Serve the frontend and backend over HTTPS so the auth cookie can use `secure: true`.
+- For a separate `github-cms` frontend, proxy its `/api/*` requests to `/api/cms/*` on this backend, and its `/uploads/*` requests to `/uploads/cms/*`.
+
+Example production backend environment:
+
+```env
+NODE_ENV=production
+PORT=5000
+CORS_ORIGIN=https://notes.example.com
+JWT_SECRET=replace-with-at-least-32-random-bytes
+JWT_EXPIRES_IN=12h
+AUTH_COOKIE_NAME=veldr_auth
+DB_STORAGE=public/data/cms.sqlite
+SECURITY_DB_STORAGE=public/data/security.sqlite
+CMS_DATA_DIR=public/data/cms
+CMS_UPLOAD_DIR=public/uploads/cms
+CMS_VIEWER_PASSWORD=replace-viewer-key
+CMS_EDITOR_PASSWORD=replace-editor-key
+```
+
+## Unified Backend Namespaces
+
+One deployed backend can serve both Veldr and the lightweight CMS:
+
+```text
+Veldr API:  /api/articles, /api/password, /api/upload
+CMS API:    /api/cms/notes, /api/cms/menus, /api/cms/auth, /api/cms/upload
+Veldr media: /uploads/*
+CMS media:   /uploads/cms/*
+```
+
+Veldr data remains in SQLite. CMS data remains JSON-based for simple migration from `github-cms`; copy the existing `github-cms/data/db.json` into the configured `CMS_DATA_DIR` to reuse existing notes.
 
 ## Password Notes
 
@@ -83,6 +142,8 @@ backend/public/data/security.sqlite
 ```
 
 The checked-in README documents how the password system works, but not any private local password currently in use.
+
+Passwords are stored as bcrypt hashes. The backend sets an HttpOnly JWT cookie after password verification; protected write APIs require that cookie.
 
 ## Data And Cleanup
 
@@ -112,11 +173,12 @@ node scripts/cleanup-unused-images.js --delete
 Useful checks before pushing:
 
 ```bash
-cd frontend
+cd backend
+npm test
 npm run build
 
-cd ../backend
-node --input-type=module -e "import Article from './models/Article.js'; const a = Article.build({ title: '中文个人笔记', content: 'test' }); await a.validate(); console.log(a.slug ?? null); await Article.sequelize.close();"
+cd ../frontend
+npm run build
 ```
 
 ## Git Remote

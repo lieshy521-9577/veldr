@@ -11,15 +11,23 @@
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PasswordAuth from '@/components/ui/PasswordAuth.vue';
+import { apiFetch } from '@/utils/apiClient.js';
 
 const route = useRoute();
 const router = useRouter();
 const redirectPath = route.query.redirect || '/';
 
-onMounted(() => {
+onMounted(async () => {
   const isAuthenticated = localStorage.getItem('cms_authenticated') === 'true';
-  if (isAuthenticated) {
+  if (!isAuthenticated) return;
+
+  const response = await apiFetch('/api/password/info').catch(() => null);
+
+  if (response?.ok) {
     router.replace(redirectPath);
+  } else {
+    localStorage.removeItem('cms_authenticated');
+    window.dispatchEvent(new CustomEvent('authStateChanged'));
   }
 });
 

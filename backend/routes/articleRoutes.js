@@ -1,6 +1,7 @@
 import express from 'express';
 import { upload, handleUploadErrors } from '../middleware/upload.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { attachAuthState, requireAuth } from '../middleware/auth.js';
 import { 
   getArticles, 
   getArticleById, 
@@ -12,6 +13,8 @@ import {
 } from '../controllers/articleController.js';
 
 const router = express.Router();
+
+router.use(attachAuthState);
 
 // Get all articles
 router.get(
@@ -28,6 +31,7 @@ router.get('/:id', asyncHandler(getArticleById));
 // Create a new article
 router.post(
   '/',
+  requireAuth,
   upload.single('featuredImage'),
   handleUploadErrors,
   asyncHandler(createArticle)
@@ -36,6 +40,7 @@ router.post(
 // Update an article
 router.put(
   '/:id',
+  requireAuth,
   upload.single('featuredImage'),
   handleUploadErrors,
   asyncHandler(updateArticle)
@@ -44,12 +49,14 @@ router.put(
 // Update article status only
 router.patch(
   '/:id/status',
+  requireAuth,
   asyncHandler(updateArticleStatus)
 );
 
 // Delete an article
 router.delete(
   '/:id',
+  requireAuth,
   asyncHandler(deleteArticle)
 );
 

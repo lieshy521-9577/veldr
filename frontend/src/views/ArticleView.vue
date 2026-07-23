@@ -64,6 +64,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { apiFetch } from '@/utils/apiClient.js';
 
 const route = useRoute();
 const article = ref({});
@@ -109,7 +110,7 @@ const fetchArticle = async () => {
       url = `/api/articles/slug/${key}`;
     }
 
-    const response = await fetch(url);
+    const response = await apiFetch(url);
 
     if (!response.ok) {
       throw new Error(response.status === 404 ? 'Article not found' : 'Failed to fetch article');

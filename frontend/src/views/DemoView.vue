@@ -150,6 +150,7 @@
 import { ref, onMounted } from 'vue';
 import { format } from 'date-fns';
 import LazyImage from '@/components/ui/LazyImage.vue';
+import { apiFetch } from '@/utils/apiClient.js';
 
 const articles = ref([]);
 const loading = ref(true);
@@ -174,7 +175,7 @@ const fetchArticles = async (page = 1, append = false) => {
       loadingMore.value = true;
     }
 
-    const response = await fetch(`/api/articles?page=${page}&limit=${pageSize}&status=published`);
+    const response = await apiFetch(`/api/articles?page=${page}&limit=${pageSize}&status=published`);
 
     if (!response.ok) {
       throw new Error('Failed to fetch articles');

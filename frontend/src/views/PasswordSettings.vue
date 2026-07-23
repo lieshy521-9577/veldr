@@ -9,19 +9,19 @@
       <div class="settings-grid">
         <section class="settings-card">
           <div class="card-header">
-            <h3>Current Password</h3>
+            <h3>Password Status</h3>
           </div>
           <div class="card-body">
             <div class="password-item">
               <label>System password</label>
               <div class="password-display">
-                <span class="password-mask">{{ passwordMask }}</span>
-                <button @click="togglePasswordVisibility" class="btn btn-sm btn-outline-secondary" type="button">
-                  <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                </button>
+                <span class="password-mask">{{ passwordDisplay }}</span>
               </div>
             </div>
             <p class="status-text">{{ passwordStatus }}</p>
+            <p v-if="passwordInfo.lastModified" class="status-text">
+              Last changed {{ formatDate(passwordInfo.lastModified) }}
+            </p>
           </div>
         </section>
 
@@ -82,55 +82,46 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { usePasswordAuth } from '@/composables/usePasswordAuth.js';
 import { useToast } from 'vue-toastification';
 
 const {
   getPasswordInfo,
   setPassword,
-  resetToDefault
+  resetToDefault,
 } = usePasswordAuth();
+
 const toast = useToast();
+const router = useRouter();
 
 const newPassword = ref('');
 const isUpdating = ref(false);
-const showPassword = ref(false);
 const passwordInfo = ref({
   isSet: false,
   length: 0,
   isDefault: true,
   lastModified: null,
-  password: null
 });
 
 const passwordDisplay = computed(() => {
   if (!passwordInfo.value.isSet) return 'Not set';
-  return '••••••';
-});
-
-const passwordMask = computed(() => {
-  if (!showPassword.value) return passwordDisplay.value;
-  if (!passwordInfo.value.isSet) return 'Not set';
-  if (passwordInfo.value.isDefault) return '123456';
-
-  const password = passwordInfo.value.password || '';
-  if (password.length >= 2) {
-    return `${password[0]}••••${password[password.length - 1]}`;
-  }
-  return passwordDisplay.value;
+  return `${passwordInfo.value.length || 6}-digit password set`;
 });
 
 const passwordStatus = computed(() => {
   if (!passwordInfo.value.isSet) return 'No password has been configured yet.';
-  return passwordInfo.value.isDefault ? 'Default password is active (123456).' : 'Custom password is active.';
+  return passwordInfo.value.isDefault ? 'Default password is active.' : 'Custom password is active.';
 });
 
 const onPasswordInput = () => {
   newPassword.value = newPassword.value.replace(/\D/g, '');
 };
 
-const togglePasswordVisibility = () => {
-  showPassword.value = !showPassword.value;
+const formatDate = (value) => new Date(value).toLocaleString();
+
+const redirectToVerification = () => {
+  router.push({ name: 'PasswordVerification', query: { redirect: '/password-settings' } });
 };
 
 const loadPasswordInfo = async () => {
@@ -151,9 +142,9 @@ const updatePassword = async () => {
   try {
     isUpdating.value = true;
     await setPassword(newPassword.value);
-    toast.success('Password updated');
+    toast.success('Password updated. Please sign in again.');
     newPassword.value = '';
-    await loadPasswordInfo();
+    redirectToVerification();
   } catch (error) {
     toast.error(error.message || 'Failed to update password');
   } finally {
@@ -167,8 +158,8 @@ const resetPassword = async () => {
   try {
     isUpdating.value = true;
     await resetToDefault();
-    toast.success('Password reset to default');
-    await loadPasswordInfo();
+    toast.success('Password reset to default. Please sign in again.');
+    redirectToVerification();
   } catch (error) {
     toast.error(error.message || 'Failed to reset password');
   } finally {
@@ -266,8 +257,8 @@ onMounted(loadPasswordInfo);
 .password-mask {
   color: var(--color-text-muted);
   font-family: var(--font-family-mono);
-  font-size: 1.2rem;
-  letter-spacing: 0.1rem;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .status-text {
@@ -346,21 +337,10 @@ onMounted(loadPasswordInfo);
   border-color: var(--color-accent);
 }
 
-.btn-outline-secondary {
-  color: var(--color-text);
-  background: transparent;
-  border-color: var(--color-border);
-}
-
 .btn-outline-warning {
   color: var(--color-warning);
   background: transparent;
   border-color: rgba(245, 158, 11, 0.38);
-}
-
-.btn-sm {
-  min-height: 2rem;
-  padding: 0.35rem 0.55rem;
 }
 
 @media (max-width: 768px) {

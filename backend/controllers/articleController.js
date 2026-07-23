@@ -31,7 +31,8 @@ const handleFileUpload = (file) => {
 const getArticles = async (req, res) => {
   try {
     const { status, search, page = 1, limit = 10 } = req.query;
-    const result = await listArticles({ status, search, page, limit });
+    const requestedStatus = req.auth?.isAuthenticated ? status : 'published';
+    const result = await listArticles({ status: requestedStatus, search, page, limit });
     res.json({ success: true, data: result.items, pagination: { total: result.total, page: result.page, pageSize: result.pageSize, totalPages: Math.ceil(result.total / result.pageSize) } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch articles', error: error.message });
@@ -43,6 +44,7 @@ const getArticleById = async (req, res) => {
   try {
     const { id } = req.params;
     const { admin } = req.query;
+    const isAuthenticated = Boolean(req.auth?.isAuthenticated);
     const article = await getArticle(id);
     
     if (!article) {
@@ -52,9 +54,14 @@ const getArticleById = async (req, res) => {
       });
     }
     
-    // Only allow access to published and private articles from frontend
-    // Allow admin access to all articles including drafts
-    if (article.status === 'draft' && admin !== 'true') {
+    if (!isAuthenticated && article.status !== 'published') {
+      return res.status(404).json({
+        success: false,
+        message: 'Article not found'
+      });
+    }
+
+    if (article.status === 'draft' && admin === 'true' && !isAuthenticated) {
       return res.status(404).json({
         success: false,
         message: 'Article not found'
@@ -79,6 +86,7 @@ const getArticleById = async (req, res) => {
 const getArticleBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    const isAuthenticated = Boolean(req.auth?.isAuthenticated);
     const article = await svcGetArticleBySlug(slug);
     
     if (!article) {
@@ -88,8 +96,7 @@ const getArticleBySlug = async (req, res) => {
       });
     }
     
-    // Only allow access to published and private articles from frontend
-    if (article.status === 'draft') {
+    if (!isAuthenticated && article.status !== 'published') {
       return res.status(404).json({
         success: false,
         message: 'Article not found'

@@ -72,9 +72,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', checkIfMobile);
 });
 
-const handleLogout = () => {
+const handleLogout = async () => {
   if (confirm('Log out of admin?')) {
-    logout();
+    await logout();
     router.push('/');
   }
 };

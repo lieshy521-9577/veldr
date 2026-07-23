@@ -78,7 +78,7 @@ import { ref, onMounted, nextTick } from 'vue';
 import { usePasswordAuth } from '@/composables/usePasswordAuth.js';
 
 const emit = defineEmits(['success', 'cancel']);
-const { verifyPassword, clearAllPasswords } = usePasswordAuth();
+const { verifyPassword, clearAuth } = usePasswordAuth();
 
 const password = ref('');
 const isVerifying = ref(false);
@@ -130,7 +130,7 @@ const handleClear = () => {
 };
 
 const handleLogout = () => {
-  clearAllPasswords();
+  clearAuth();
   emit('cancel');
 };
 </script>
