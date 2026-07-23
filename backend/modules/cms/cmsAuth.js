@@ -23,7 +23,6 @@ const accessKeyOf = (req) => req.get('X-Access-Key') || req.query?.token || req.
 const roleOf = async (key) => {
   if (!key) return null;
   if (key === await getEditorPassword()) return 'editor';
-  if (key === config.cms.viewerPassword) return 'viewer';
   return null;
 };
 
@@ -34,11 +33,7 @@ const requireViewer = async (req, res, next) => {
   }
 
   const role = await roleOf(accessKeyOf(req));
-  if (!role) {
-    return res.status(401).json({ error: 'Access key required' });
-  }
-
-  req.cmsRole = role;
+  req.cmsRole = role || 'viewer';
   return next();
 };
 
@@ -60,8 +55,8 @@ const requireEditor = async (req, res, next) => {
 const authenticateCms = async (req, res) => {
   const key = req.body?.key || '';
   const role = await roleOf(key);
-  if (!role) {
-    return res.status(401).json({ error: 'Invalid access key' });
+  if (role !== 'editor') {
+    return res.status(401).json({ error: 'Invalid editor key' });
   }
   return res.status(200).json({ role });
 };

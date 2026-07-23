@@ -23,7 +23,6 @@ Edit `backend\.env.prod` and set strong production values, especially:
 ```text
 JWT_SECRET
 DEFAULT_PASSWORD
-CMS_VIEWER_PASSWORD
 CMS_EDITOR_PASSWORD
 ```
 

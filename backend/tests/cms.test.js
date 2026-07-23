@@ -11,7 +11,6 @@ let Password;
 let resetDBForTests;
 let tempDir;
 
-const viewerKey = 'view';
 const editorKey = '654321';
 
 beforeAll(async () => {
@@ -22,7 +21,6 @@ beforeAll(async () => {
   process.env.SECURITY_DB_STORAGE = path.join(tempDir, 'security.sqlite');
   process.env.CMS_DATA_DIR = path.join(tempDir, 'cms-data');
   process.env.CMS_UPLOAD_DIR = path.join(tempDir, 'cms-uploads');
-  process.env.CMS_VIEWER_PASSWORD = viewerKey;
   process.env.CMS_EDITOR_PASSWORD = editorKey;
   process.env.JWT_SECRET = 'test-secret';
   process.env.DEFAULT_PASSWORD = '123456';
@@ -74,12 +72,11 @@ afterAll(async () => {
 });
 
 describe('unified CMS module', () => {
-  it('authenticates viewer and editor access keys', async () => {
+  it('authenticates editor access key only', async () => {
     await request(app)
       .post('/api/cms/auth')
-      .send({ key: viewerKey })
-      .expect(200)
-      .expect(({ body }) => expect(body.role).toBe('viewer'));
+      .send({ key: 'viewer-no-longer-needed' })
+      .expect(401);
 
     await request(app)
       .post('/api/cms/auth')
@@ -88,16 +85,14 @@ describe('unified CMS module', () => {
       .expect(({ body }) => expect(body.role).toBe('editor'));
   });
 
-  it('allows viewer reads but blocks viewer writes', async () => {
+  it('allows anonymous reads but blocks anonymous writes', async () => {
     await request(app)
       .get('/api/cms/notes')
-      .set('X-Access-Key', viewerKey)
       .expect(200)
       .expect(({ body }) => expect(body).toHaveLength(1));
 
     await request(app)
       .post('/api/cms/notes')
-      .set('X-Access-Key', viewerKey)
       .send({ title: 'Blocked', content: 'Nope' })
       .expect(403);
   });

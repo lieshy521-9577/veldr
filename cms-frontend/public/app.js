@@ -181,7 +181,10 @@ const App = {
         this.accessKey = null;
       }
     }
-    this.showLogin();
+    this.role = 'viewer';
+    this.applyRoleUI();
+    this.hideLogin();
+    this.enterApp();
   },
 
   async auth(key) {
@@ -192,7 +195,7 @@ const App = {
       body: JSON.stringify({ key })
     });
     const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error((data && data.error) || '密码错误');
+    if (!res.ok) throw new Error((data && data.error) || '编辑密码错误');
     return data; // { role }
   },
 
@@ -209,7 +212,7 @@ const App = {
       this.hideLogin();
       this.applyRoleUI();
       this.enterApp();
-      this.toast(data.role === 'editor' ? '已以编辑模式进入' : '已以查看模式进入');
+      this.toast('已以编辑模式进入');
     } catch (e) {
       this.toast(e.message);
       input.value = '';
@@ -220,13 +223,18 @@ const App = {
   },
 
   logout() {
+    if (this.role !== 'editor') {
+      this.showLogin();
+      return;
+    }
+
     if (typeof localStorage !== 'undefined') localStorage.removeItem(ACCESS_KEY_STORAGE);
     this.accessKey = null;
-    this.role = null;
-    this._notes = [];
-    this._menus = [];
-    this.hideLogin();
-    this.showLogin();
+    this.role = 'viewer';
+    this.applyRoleUI();
+    this.renderMenus();
+    this.renderNotes();
+    this.toast('已退出编辑模式');
   },
 
   enterApp() {
@@ -265,7 +273,11 @@ const App = {
       badge.style.display = '';
     }
     const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) logoutBtn.style.display = '';
+    if (logoutBtn) {
+      logoutBtn.textContent = isEditor ? '退出编辑' : '编辑登录';
+      logoutBtn.title = isEditor ? '退出编辑模式' : '输入编辑密码';
+      logoutBtn.style.display = '';
+    }
   },
 
   // ===== 导航 =====
