@@ -1,5 +1,5 @@
 param(
-  [string[]]$Servers = @("8.159.128.180"),
+  [string[]]$Servers = @("43.133.91.197"),
   [string]$ServerUser = "root",
   [string]$SshKey = "",
   [string]$RemoteVeldrPath = "/var/www/veldr",

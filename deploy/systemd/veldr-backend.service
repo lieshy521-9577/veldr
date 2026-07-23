@@ -1,0 +1,39 @@
+[Unit]
+Description=Veldr unified backend
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/veldr/backend
+EnvironmentFile=-/opt/veldr/backend/.env
+Environment=NODE_ENV=production
+Environment=PORT=5000
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=veldr-backend
+
+PermissionsStartOnly=true
+ExecStartPre=/bin/mkdir -p /opt/veldr/backend/public/data /opt/veldr/backend/public/uploads /opt/veldr/backend/temp
+ExecStartPre=/bin/chown -R www-data:www-data /opt/veldr/backend/public/data /opt/veldr/backend/public/uploads /opt/veldr/backend/temp
+ExecStartPre=/bin/chmod -R 750 /opt/veldr/backend/public/data /opt/veldr/backend/temp
+ExecStartPre=/bin/chmod -R 755 /opt/veldr/backend/public/uploads
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/veldr/backend/public/data
+ReadWritePaths=/opt/veldr/backend/public/uploads
+ReadWritePaths=/opt/veldr/backend/temp
+
+LimitNOFILE=65536
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target
