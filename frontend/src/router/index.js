@@ -139,7 +139,9 @@ const verifyServerAuth = async () => {
   if (localStorage.getItem('cms_authenticated') !== 'true') return false;
 
   try {
-    const response = await apiFetch('/api/password/info');
+    const response = await apiFetch('/api/password/info', {
+      skipUnauthorizedRedirect: true
+    });
     return response.ok;
   } catch {
     return false;

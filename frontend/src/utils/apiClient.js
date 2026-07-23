@@ -23,15 +23,16 @@ const handleUnauthorized = () => {
 };
 
 const apiFetch = async (input, options = {}) => {
+  const { skipUnauthorizedRedirect = false, ...fetchOptions } = options;
   const response = await fetch(input, {
     credentials: 'include',
-    ...options,
+    ...fetchOptions,
     headers: {
-      ...(options.headers || {}),
+      ...(fetchOptions.headers || {}),
     },
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && !skipUnauthorizedRedirect) {
     handleUnauthorized();
   }
 
