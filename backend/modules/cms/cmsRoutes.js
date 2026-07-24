@@ -42,8 +42,9 @@ router.get('/me', requireViewer, (req, res) => {
 router.get('/notes', requireViewer, async (req, res) => {
   const db = await loadDB();
   let notes = [...db.notes];
-  const { category, tag, search, star } = req.query;
+  const { category, tag, search, star, notebookId } = req.query;
 
+  if (notebookId) notes = notes.filter(note => note.notebookId === notebookId);
   if (category) notes = notes.filter(note => note.category === category);
   if (tag) notes = notes.filter(note => Array.isArray(note.tags) && note.tags.includes(tag));
   if (star === '1' || star === 'true') notes = notes.filter(note => note.starred);
@@ -79,6 +80,7 @@ router.post('/notes', requireEditor, async (req, res) => {
     id: nextId(db.notes),
     title: String(body.title),
     category: body.category || 'work',
+    notebookId: body.notebookId || null,
     tags: normalizeTags(body.tags),
     date: body.date || new Date().toISOString().split('T')[0],
     readTime: body.readTime || `${Math.max(1, Math.ceil(content.length / 500))} min`,
@@ -105,6 +107,7 @@ router.put('/notes/:id', requireEditor, async (req, res) => {
     ...current,
     title: body.title !== undefined ? String(body.title) : current.title,
     category: body.category !== undefined ? body.category : current.category,
+    notebookId: body.notebookId !== undefined ? body.notebookId || null : current.notebookId || null,
     tags: body.tags !== undefined ? normalizeTags(body.tags) : current.tags,
     content,
     excerpt: body.excerpt !== undefined ? body.excerpt : current.excerpt,
@@ -140,11 +143,11 @@ router.post('/menus', requireEditor, async (req, res) => {
   if (!label) return send(res, 400, { error: 'Menu label is required' });
 
   const menu = {
-    id: `page_${Date.now()}`,
+    id: `notebook_${Date.now()}`,
     label,
-    type: body.type || 'page',
+    type: body.type || 'notebook',
     contentKey: body.contentKey || null,
-    content: body.content || `<div class="page-view__title">${label}</div><p>Write custom content here.</p>`,
+    content: body.content || null,
   };
 
   db.menus.push(menu);
@@ -177,6 +180,9 @@ router.delete('/menus/:id', requireEditor, async (req, res) => {
   const before = db.menus.length;
   db.menus = db.menus.filter(menu => menu.id !== id);
   if (db.menus.length === before) return send(res, 404, { error: 'Menu not found' });
+  db.notes = db.notes.map(note => (
+    note.notebookId === id ? { ...note, notebookId: null } : note
+  ));
   await persistDB();
   return send(res, 200, { ok: true });
 });

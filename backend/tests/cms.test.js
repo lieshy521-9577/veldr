@@ -49,6 +49,7 @@ beforeEach(async () => {
         id: 1,
         title: 'CMS Note',
         category: 'docs',
+        notebookId: null,
         tags: ['cms'],
         content: 'CMS content',
         excerpt: 'CMS content',
@@ -97,15 +98,32 @@ describe('unified CMS module', () => {
       .expect(403);
   });
 
-  it('allows editor CRUD for notes and menus', async () => {
+  it('allows editor CRUD for notes and notebook menus', async () => {
+    const menu = await request(app)
+      .post('/api/cms/menus')
+      .set('X-Access-Key', editorKey)
+      .send({ label: 'Guide' })
+      .expect(201);
+
+    expect(menu.body.type).toBe('notebook');
+
     const note = await request(app)
       .post('/api/cms/notes')
       .set('X-Access-Key', editorKey)
-      .send({ title: 'New CMS Note', content: 'Hello CMS', tags: 'one,two' })
+      .send({ title: 'New CMS Note', content: 'Hello CMS', tags: 'one,two', notebookId: menu.body.id })
       .expect(201);
 
     expect(note.body.id).toBe(2);
     expect(note.body.tags).toEqual(['one', 'two']);
+    expect(note.body.notebookId).toBe(menu.body.id);
+
+    await request(app)
+      .get(`/api/cms/notes?notebookId=${menu.body.id}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toHaveLength(1);
+        expect(body[0].id).toBe(note.body.id);
+      });
 
     await request(app)
       .put(`/api/cms/notes/${note.body.id}`)
@@ -114,16 +132,15 @@ describe('unified CMS module', () => {
       .expect(200)
       .expect(({ body }) => expect(body.starred).toBe(true));
 
-    const menu = await request(app)
-      .post('/api/cms/menus')
-      .set('X-Access-Key', editorKey)
-      .send({ label: 'Guide' })
-      .expect(201);
-
     await request(app)
       .delete(`/api/cms/menus/${menu.body.id}`)
       .set('X-Access-Key', editorKey)
       .expect(200);
+
+    await request(app)
+      .get(`/api/cms/notes/${note.body.id}`)
+      .expect(200)
+      .expect(({ body }) => expect(body.notebookId).toBeNull());
   });
 
   it('allows Veldr admin cookie as CMS editor', async () => {

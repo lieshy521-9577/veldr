@@ -293,6 +293,11 @@ const App = {
   navTo(target) {
     this.currentNav = target;
     this.currentNote = null;
+    this.currentFilter = 'all';
+    this.searchQuery = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    this.setSidebarActive('all');
 
     document.getElementById('browseView').style.display = 'none';
     document.getElementById('detailView').classList.remove('detail-view--active');
@@ -308,6 +313,7 @@ const App = {
     if (target === 'docs') {
       document.getElementById('browseView').style.display = 'block';
       this.renderBrowseToc();
+      this.updateCounts();
       this.renderNotes();
     } else {
       const menu = this._menus.find(m => m.id === target);
@@ -323,6 +329,8 @@ const App = {
         pageEl.innerHTML = html;
       } else {
         document.getElementById('browseView').style.display = 'block';
+        this.renderBrowseToc();
+        this.updateCounts();
         this.renderNotes();
       }
     }
@@ -342,7 +350,7 @@ const App = {
         ${isEditor && m.id !== 'docs' ? `<span class="topnav__link-delete" onclick="event.stopPropagation(); App.deleteMenu('${m.id}')">✕</span>` : ''}
       </div>
     `).join('') + (isEditor ? `
-      <button class="topnav__add-menu" onclick="App.addMenu()" title="添加新菜单">+ 添加</button>
+      <button class="topnav__add-menu" onclick="App.addMenu()" title="添加笔记本">+ Notebook</button>
     ` : '');
   },
 
@@ -387,14 +395,14 @@ const App = {
 
   async addMenu() {
     if (this.role !== 'editor') { this.toast('需要编辑密码'); return; }
-    const label = prompt('请输入新菜单名称：', '新页面');
+    const label = prompt('请输入新笔记本名称：', '新笔记本');
     if (!label || !label.trim()) return;
     try {
-      const menu = await this.api('POST', apiPath('/menus'), { label: label.trim() });
+      const menu = await this.api('POST', apiPath('/menus'), { label: label.trim(), type: 'notebook' });
       await this.reloadMenus();
       this.renderMenus();
       this.navTo(menu.id);
-      this.toast('已添加菜单');
+      this.toast('已添加笔记本');
     } catch (e) { this.toast(e.message); }
   },
 
@@ -402,19 +410,40 @@ const App = {
     if (this.role !== 'editor') { this.toast('需要编辑密码'); return; }
     const menu = this._menus.find(m => m.id === id);
     if (!menu || id === 'docs') return;
-    if (!confirm(`确定要删除菜单"${menu.label}"吗？`)) return;
+    if (!confirm(`确定要删除笔记本"${menu.label}"吗？其中的笔记会移回 Docs。`)) return;
     try {
       await this.api('DELETE', apiPath('/menus/' + id));
       await this.reloadMenus();
+      await this.reloadNotes();
       if (this.currentNav === id) this.navTo('docs');
       this.renderMenus();
-      this.toast('菜单已删除');
+      this.toast('笔记本已删除');
     } catch (e) { this.toast(e.message); }
   },
 
   // ===== 笔记 CRUD =====
+  getCurrentMenu() {
+    return this._menus.find(menu => menu.id === this.currentNav) || null;
+  },
+
+  getCurrentNotebookId() {
+    const menu = this.getCurrentMenu();
+    return menu && menu.type === 'notebook' ? menu.id : null;
+  },
+
+  getCurrentNotebookLabel() {
+    const menu = this.getCurrentMenu();
+    return menu && menu.type === 'notebook' ? menu.label : 'Docs';
+  },
+
+  getScopedNotes() {
+    const notebookId = this.getCurrentNotebookId();
+    if (!notebookId) return [...this._notes];
+    return this._notes.filter(note => note.notebookId === notebookId);
+  },
+
   getFilteredNotes() {
-    let notes = [...this._notes];
+    let notes = this.getScopedNotes();
     if (this.currentFilter === 'star') notes = notes.filter(n => n.starred);
     else if (this.currentFilter === 'work') notes = notes.filter(n => n.category === 'work');
     else if (this.currentFilter === 'learn') notes = notes.filter(n => n.category === 'learn');
@@ -435,26 +464,31 @@ const App = {
   },
 
   updateCounts() {
-    const notes = this._notes;
+    const notes = this.getScopedNotes();
     document.getElementById('countAll').textContent = notes.length;
     document.getElementById('countWork').textContent = notes.filter(n => n.category === 'work').length;
     document.getElementById('countLearn').textContent = notes.filter(n => n.category === 'learn').length;
     document.getElementById('countStar').textContent = notes.filter(n => n.starred).length;
   },
 
+  setSidebarActive(filter, el) {
+    document.querySelectorAll('.sidebar__item--active').forEach(i => i.classList.remove('sidebar__item--active'));
+    const target = el || document.querySelector(`.sidebar__item[data-filter="${filter}"]`);
+    if (target) target.classList.add('sidebar__item--active');
+  },
+
   setFilter(filter, el) {
     this.currentFilter = filter;
     this.searchQuery = '';
     document.getElementById('searchInput').value = '';
-    document.querySelectorAll('.sidebar__item--active').forEach(i => i.classList.remove('sidebar__item--active'));
-    el.classList.add('sidebar__item--active');
+    this.setSidebarActive(filter, el);
     this.showBrowse();
+    this.updateCounts();
     this.renderNotes();
   },
 
   showBrowse() {
     this.currentNote = null;
-    this.currentNav = 'docs';
     document.getElementById('browseView').style.display = 'block';
     document.getElementById('detailView').classList.remove('detail-view--active');
     document.getElementById('pageView').classList.remove('page-view--active');
@@ -479,6 +513,7 @@ const App = {
     const metaHTML = [
       `<span class="detail__meta-tag">${note.category === 'work' ? '工作' : '学习'}</span>`,
       ...(note.tags || []).map(t => `<span>#${this.escapeHTML(t)}</span>`),
+      note.notebookId ? `<span>📚 ${this.escapeHTML(this._menus.find(m => m.id === note.notebookId)?.label || 'Notebook')}</span>` : '',
       `<span>📅 ${note.date}</span>`,
       `<span>⏱ ${note.readTime}阅读</span>`,
       note.starred ? '<span>⭐ 已收藏</span>' : ''
@@ -574,7 +609,7 @@ const App = {
     if (!content) { alert('请输入笔记内容'); return; }
 
     const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
-    const payload = { title, category, tags, content };
+    const payload = { title, category, tags, content, notebookId: this.getCurrentNotebookId() };
 
     this.showLoading(true);
     try {
@@ -719,14 +754,19 @@ const App = {
       'learn': '学习过程中记录的知识点、技术总结和实践笔记。',
       'star': '你收藏的重要笔记，方便快速查找和回顾。'
     };
-    const title = filterLabels[this.currentFilter] || this.currentFilter.replace('tag:', '#');
-    const desc = filterDescs[this.currentFilter] || '';
+    const filterTitle = filterLabels[this.currentFilter] || this.currentFilter.replace('tag:', '#');
+    const notebookLabel = this.getCurrentNotebookLabel();
+    const isNotebook = Boolean(this.getCurrentNotebookId());
+    const title = isNotebook ? `${notebookLabel} / ${filterTitle}` : filterTitle;
+    const desc = isNotebook
+      ? `当前笔记本独立保存自己的笔记和分类；标签来自全局，可在此笔记本内继续筛选。`
+      : (filterDescs[this.currentFilter] || '');
 
     let html = `
       <div class="content-header">
         <div class="content-header__breadcrumb">
-          <a onclick="App.navTo('docs')">首页</a><span>/</span>
-          <a id="breadcrumbCurrent">${this.escapeHTML(title)}</a>
+          <a onclick="App.navTo('docs')">Docs</a><span>/</span>
+          <a id="breadcrumbCurrent">${this.escapeHTML(isNotebook ? notebookLabel : filterTitle)}</a>
         </div>
         <h1 class="content-header__title">${this.escapeHTML(title)}</h1>
         <p class="content-header__desc">${desc}</p>
