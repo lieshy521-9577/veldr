@@ -1,0 +1,29 @@
+// App 控制器的共享状态基座。各功能模块（api/auth/menus/...）的方法在
+// main.js 中通过 Object.assign 合入本对象，方法内 this 即指向 App。
+export const App = {
+  _notes: [],
+  _menus: [],
+  _categories: [],
+  currentFilter: 'all',
+  currentNote: null,
+  searchQuery: '',
+  editingNoteId: null,
+  editingMenuId: null,
+  editingNoteVersion: null,
+  autosaveTimer: null,
+  autosaveInFlight: false,
+  autosaveDirty: false,
+  suppressAutosave: false,
+  conflictPending: false,
+  _previewCache: new Map(),
+  _previewTimer: null,
+  _searchTimer: null,
+  _lastServerRefreshAt: 0,
+  lastKnownNotesVersion: '',
+  currentEditorMode: 'split',
+  currentNav: 'docs',
+  accessKey: null,
+  role: null,            // 'viewer' | 'editor' | null
+  _applyingRoute: false,
+  _suppressHashHandler: false,
+};
