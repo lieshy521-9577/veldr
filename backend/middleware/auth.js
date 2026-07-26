@@ -4,7 +4,7 @@ import { config } from '../config/index.js';
 const authCookieOptions = {
   httpOnly: true,
   sameSite: 'lax',
-  secure: config.nodeEnv === 'production',
+  secure: config.auth.cookieSecure,
   maxAge: config.auth.cookieMaxAgeMs,
   path: '/',
 };
