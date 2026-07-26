@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="image-crop-modal" @click.self="closeModal">
+  <div v-if="show" ref="modalRef" class="image-crop-modal" role="dialog" aria-modal="true" aria-label="Crop image" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Crop Image</h3>
@@ -95,6 +95,7 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue';
 import VueCropper from 'vue-cropperjs';
+import { useModalA11y } from '@/composables/useModalA11y.js';
 
 const props = defineProps({
   show: {
@@ -112,6 +113,14 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'crop-complete']);
+
+const modalRef = ref(null);
+// 原先该弹窗连 ESC 关闭都没有，与 DeleteConfirmModal 行为不一致
+useModalA11y(modalRef, {
+  onEscape: () => {
+    if (props.show && !isProcessing.value) emit('close');
+  },
+});
 
 const cropper = ref(null);
 const quality = ref(0.8);

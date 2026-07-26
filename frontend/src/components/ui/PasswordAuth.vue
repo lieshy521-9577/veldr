@@ -1,5 +1,5 @@
 <template>
-  <div class="password-auth-overlay">
+  <div ref="modalRef" class="password-auth-overlay" role="dialog" aria-modal="true" aria-label="Password required">
     <div class="password-auth-modal">
       <div class="password-auth-header">
         <i class="fas fa-lock"></i>
@@ -76,6 +76,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
 import { usePasswordAuth } from '@/composables/usePasswordAuth.js';
+import { useModalA11y } from '@/composables/useModalA11y.js';
 
 const emit = defineEmits(['success', 'cancel']);
 const { verifyPassword, clearAuth } = usePasswordAuth();
@@ -84,6 +85,8 @@ const password = ref('');
 const isVerifying = ref(false);
 const errorMessage = ref('');
 const passwordInput = ref(null);
+const modalRef = ref(null);
+useModalA11y(modalRef);
 
 onMounted(() => {
   nextTick(() => passwordInput.value?.focus());

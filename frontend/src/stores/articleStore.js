@@ -225,7 +225,7 @@ export const useArticleStore = defineStore('article', () => {
       
       if (response.success) {
         // Update the article in the list
-        updateArticle(response.data);
+        updateArticle(response.data.id, response.data);
         return response.data;
       } else {
         throw new Error(response.message || 'Failed to update article status');

@@ -27,6 +27,11 @@ const getOrCreatePasswordRecord = async () => {
   return createPasswordRecord();
 };
 
+const passwordChangeListeners = new Set();
+const onPasswordChange = (listener) => {
+  passwordChangeListeners.add(listener);
+};
+
 const updatePasswordInDB = async (newPassword) => {
   const hashedPassword = await hashPassword(newPassword);
   const [passwordRecord] = await Password.upsert({
@@ -36,6 +41,7 @@ const updatePasswordInDB = async (newPassword) => {
     lastModified: new Date(),
   });
 
+  passwordChangeListeners.forEach((listener) => listener());
   return passwordRecord;
 };
 
@@ -233,7 +239,9 @@ const initializePasswords = async (req, res) => {
 
 export {
   getOrCreatePasswordRecord,
+  updatePasswordInDB,
   verifyAgainstStoredPassword,
+  onPasswordChange,
 };
 
 export default {

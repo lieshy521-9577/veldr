@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click="handleOverlayClick">
+  <div v-if="show" ref="modalRef" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Confirm delete" @click="handleOverlayClick">
     <div class="modal-dialog" @click.stop>
       <div class="modal-content">
         <div class="modal-header">
@@ -56,7 +56,11 @@
 </template>
 
 <script setup>
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
+import { useModalA11y } from '@/composables/useModalA11y.js';
+
+const modalRef = ref(null);
+useModalA11y(modalRef);
 
 const props = defineProps({
   show: {

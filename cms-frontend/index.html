@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NoteFlow — 笔记管理</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -28,7 +29,7 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{font-size:16px;-webkit-font-smoothing:antialiased}
-body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-height:1.6;overflow:hidden;height:100vh}
+body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-height:1.6;overflow:hidden;height:100vh;height:100dvh}
 
 /* ===== Top Nav ===== */
 .topnav{
@@ -49,6 +50,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
   color:#fff;font-weight:600;font-size:13px;
 }
 .topnav__title{font-size:1.0625rem;font-weight:600;letter-spacing:-.02em}
+.topnav__mobile-current,.topnav__mobile-filter{display:none}
 .topnav__menu{display:flex;align-items:center;gap:var(--s1);flex-wrap:nowrap}
 .topnav__link{
   padding:var(--s2) var(--s4);font-size:.875rem;font-weight:500;
@@ -100,7 +102,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .topnav__btn:hover{background:var(--a700);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 
 /* ===== Layout ===== */
-.layout{display:flex;margin-top:var(--topnav-h);height:calc(100vh - var(--topnav-h))}
+.layout{display:flex;margin-top:var(--topnav-h);height:calc(100vh - var(--topnav-h));height:calc(100dvh - var(--topnav-h))}
 
 /* ===== Sidebar ===== */
 .sidebar{
@@ -124,11 +126,30 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .sidebar__item:hover{color:var(--c900);background:var(--c50)}
 .sidebar__item--active{color:var(--a700);background:var(--a50);border-right-color:var(--a500);font-weight:500}
 .sidebar__icon{width:17px;height:17px;flex-shrink:0}
+.sidebar__item-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sidebar__count{
   margin-left:auto;padding:0 var(--s2);font-size:.75rem;font-weight:500;
   color:var(--c400);background:var(--c100);border-radius:999px;
 }
 .sidebar__item--active .sidebar__count{color:var(--a600);background:var(--a100)}
+.sidebar__category .sidebar__count{margin-left:0}
+.sidebar__item-actions{display:none;margin-left:auto;gap:4px}
+.sidebar__category:hover .sidebar__item-actions{display:flex}
+.sidebar__icon-btn{
+  width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--c200);border-radius:6px;background:#fff;color:var(--c500);
+  cursor:pointer;font-size:.75rem;line-height:1;transition:all .15s var(--ease);
+}
+.sidebar__icon-btn:hover{border-color:var(--a300);color:var(--a700);background:var(--a50)}
+.sidebar__icon-btn--danger:hover{border-color:#fecaca;color:var(--err);background:#fef2f2}
+.sidebar__add-btn{
+  margin:6px var(--s6) 0;width:calc(100% - var(--s6) * 2);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 10px;border:1px dashed var(--c300);border-radius:8px;
+  background:#fff;color:var(--c500);font:600 .8125rem var(--font-sans);
+  cursor:pointer;transition:all .15s var(--ease);
+}
+.sidebar__add-btn:hover{border-color:var(--a400);color:var(--a700);background:var(--a50)}
 .sidebar__divider{height:1px;background:var(--c200);margin:var(--s4) var(--s6)}
 
 /* ===== Main ===== */
@@ -174,20 +195,30 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .note-card__action-btn:hover{background:var(--c100);color:var(--c700);border-color:var(--c300)}
 .note-card__action-btn--delete:hover{background:#fef2f2;color:var(--err);border-color:#fecaca}
 .note-card__tag{
-  padding:2px var(--s2);font-size:.75rem;font-weight:500;
-  color:var(--a700);background:var(--a50);border-radius:4px;
+  display:inline-flex;align-items:center;min-height:24px;
+  padding:2px 8px;font-size:.75rem;font-weight:600;line-height:1;
+  color:var(--a700);background:var(--a50);border:1px solid rgba(16,185,129,.14);
+  border-radius:7px;white-space:nowrap;transition:all .15s var(--ease);
 }
+.note-card:hover .note-card__tag{background:#ecfdf5;border-color:rgba(16,185,129,.24)}
 .note-card__title{font-size:1.0625rem;font-weight:600;color:var(--c900);margin-bottom:var(--s2);line-height:1.4}
 .note-card__excerpt{
   font-size:.875rem;color:var(--c500);line-height:1.6;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .note-card__footer{
-  display:flex;align-items:center;justify-content:space-between;
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 12px;align-items:center;
   margin-top:var(--s4);padding-top:var(--s4);border-top:1px solid var(--c100);
   font-size:.8125rem;color:var(--c400);
 }
-.note-card__date{display:flex;align-items:center;gap:4px}
+.note-card__date{display:flex;align-items:center;gap:6px;min-width:0;color:var(--c500)}
+.note-card__date svg{flex:0 0 auto}
+.note-card__readtime{justify-self:end;white-space:nowrap;color:var(--c500)}
+.note-card__tags{
+  grid-column:1 / -1;display:flex;align-items:center;flex-wrap:wrap;
+  gap:6px 7px;min-height:24px;
+}
+.note-card__tags:empty{display:none}
 
 /* ===== View: Detail ===== */
 .detail-view{display:none}
@@ -207,6 +238,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .detail__content h2{font-size:1.375rem;font-weight:600;letter-spacing:-.02em;color:var(--c900);line-height:1.3;margin-top:var(--s10);margin-bottom:var(--s4);padding-top:var(--s8);border-top:1px solid var(--c200)}
 .detail__content h3{font-size:1.125rem;font-weight:600;color:var(--c900);margin-top:var(--s8);margin-bottom:var(--s3)}
 .detail__content p{font-size:1rem;color:var(--c600);line-height:1.85;margin-bottom:var(--s4)}
+.detail__content p,.markdown-preview p{white-space:pre-wrap}
 .detail__content code{font-family:var(--font-mono);font-size:.875em;padding:.125em var(--s2);background:var(--c100);border-radius:4px;color:var(--a700)}
 .detail__content pre{background:var(--c900);border-radius:11px;padding:var(--s5);margin:var(--s6) 0;overflow-x:auto}
 .detail__content pre code{background:none;color:var(--a200);padding:0;font-size:.875rem;line-height:1.75}
@@ -246,7 +278,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 }
 .modal-overlay--active{display:flex}
 .modal{
-  background:#fff;border-radius:14px;width:90%;max-width:640px;max-height:85vh;
+  background:#fff;border-radius:14px;width:92%;max-width:1080px;max-height:88vh;
   overflow-y:auto;box-shadow:0 20px 60px rgb(0 0 0/.15);
 }
 .modal__header{
@@ -281,7 +313,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .markdown-preview pre{padding:var(--s3);overflow:auto;border-radius:6px;background:var(--c900);color:#f8fafc}
 .markdown-preview img{max-width:100%;height:auto;border-radius:6px}
 @media(max-width:768px){.markdown-editor{grid-template-columns:1fr}.markdown-preview{max-height:260px}}
-.modal__toolbar{display:flex;gap:var(--s2);margin-bottom:var(--s3)}
+.modal__toolbar{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap}
 .modal__tool-btn{
   display:inline-flex;align-items:center;gap:var(--s2);
   padding:var(--s2) var(--s4);font-size:.8125rem;font-weight:500;font-family:var(--font-sans);
@@ -289,6 +321,37 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
   cursor:pointer;transition:all .15s var(--ease);
 }
 .modal__tool-btn:hover{background:var(--c200);color:var(--c900);border-color:var(--c300)}
+.modal__tool-btn--icon{min-width:34px;padding:var(--s2);justify-content:center}
+.modal__view-toggle{margin-left:auto;display:inline-flex;padding:3px;border:1px solid var(--c200);border-radius:9px;background:var(--c100);flex-shrink:0}
+.modal__view-btn{border:0;background:transparent;border-radius:7px;padding:6px 10px;font-size:.78rem;font-weight:600;color:var(--c500);cursor:pointer;font-family:var(--font-sans)}
+.modal__view-btn--active{background:#fff;color:var(--a700);box-shadow:var(--shadow-sm)}
+.markdown-source{min-width:0}
+.modal__textarea{min-height:420px;font-family:var(--font-mono)}
+.markdown-editor{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.markdown-editor--write{grid-template-columns:1fr}
+.markdown-editor--write .markdown-preview{display:none}
+.markdown-editor--preview{grid-template-columns:1fr}
+.markdown-editor--preview .markdown-source{display:none}
+.markdown-preview{min-height:420px;max-height:560px;padding:var(--s4);line-height:1.75}
+.markdown-preview h1,.markdown-preview h2,.markdown-preview h3,.markdown-preview h4{color:var(--c900);line-height:1.25}
+.markdown-preview h1{font-size:1.75rem}.markdown-preview h2{font-size:1.35rem}.markdown-preview h3{font-size:1.1rem}
+.markdown-preview p,.markdown-preview ul,.markdown-preview ol,.markdown-preview pre,.markdown-preview blockquote,.markdown-preview table{margin:0 0 var(--s3)}
+.markdown-preview ul,.markdown-preview ol{padding-left:var(--s6)}
+.markdown-preview blockquote{padding:var(--s2) var(--s4);border-left:3px solid var(--a400);background:var(--a50);color:var(--c600);border-radius:0 7px 7px 0}
+.markdown-preview code{font-family:var(--font-mono);font-size:.875em;padding:1px 5px;background:var(--c100);border-radius:4px;color:var(--a700)}
+.markdown-preview pre code{padding:0;background:none;color:inherit}
+.markdown-preview table{width:100%;border-collapse:collapse;font-size:.9rem;background:#fff}
+.markdown-preview th,.markdown-preview td{border:1px solid var(--c200);padding:8px 10px;text-align:left}
+.markdown-preview th{background:var(--c100);font-weight:600;color:var(--c900)}
+.markdown-preview input[type="checkbox"]{accent-color:var(--a600)}
+.markdown-preview a{color:var(--a700);text-decoration:none}
+.markdown-preview a:hover{text-decoration:underline}
+.markdown-status{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s3);font-size:.8125rem;color:var(--c400)}
+.markdown-status span{padding:2px 8px;border-radius:999px;background:var(--c100)}
+.shortcut-grid{display:grid;gap:10px}
+.shortcut-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--c100);font-size:.9rem;color:var(--c600)}
+.shortcut-row:last-child{border-bottom:0}
+.shortcut-key{font-family:var(--font-mono);font-size:.8rem;font-weight:600;color:var(--c700);background:var(--c100);border:1px solid var(--c200);border-radius:6px;padding:3px 7px;white-space:nowrap}
 .modal__hint{font-size:.8125rem;color:var(--c400);margin-top:var(--s1)}
 .modal__footer{
   padding:var(--s4) var(--s6) var(--s6);
@@ -351,21 +414,126 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .topnav__role{font-size:.75rem;font-weight:500;padding:var(--s1) var(--s3);border-radius:999px;white-space:nowrap}
 .topnav__role--editor{color:var(--a700);background:var(--a50)}
 .topnav__role--viewer{color:var(--info);background:#eff6ff}
-.topnav__logout{padding:var(--s2) var(--s4);font-size:.8125rem;font-weight:500;font-family:var(--font-sans);color:var(--c600);background:var(--c100);border:1px solid var(--c200);border-radius:7px;cursor:pointer;transition:all .15s var(--ease)}
-.topnav__logout:hover{background:var(--c200);color:var(--c900)}
+.topnav__logout,.topnav__password{padding:var(--s2) var(--s4);font-size:.8125rem;font-weight:500;font-family:var(--font-sans);color:var(--c600);background:var(--c100);border:1px solid var(--c200);border-radius:7px;cursor:pointer;transition:all .15s var(--ease)}
+.topnav__logout:hover,.topnav__password:hover{background:var(--c200);color:var(--c900)}
 
 /* ===== Responsive ===== */
 @media(max-width:768px){
-  .sidebar{position:fixed;left:-264px;top:var(--topnav-h);height:calc(100vh - var(--topnav-h));z-index:50;transition:left .25s var(--ease)}
+  :root{--topnav-h:158px}
+  html,body{height:100vh;height:100dvh;overflow:hidden}
+  .topnav{
+    height:var(--topnav-h);display:grid;grid-template-columns:auto minmax(0,1fr);
+    grid-template-rows:42px 88px;gap:8px 10px;align-items:center;padding:8px var(--s4) 12px;
+  }
+  .topnav__brand{min-width:0}
+  .topnav__logo{width:28px;height:28px}
+  .topnav__title{font-size:1rem}
+  .topnav__menu{display:none}
+  .topnav__mobile-current{
+    display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+    min-width:0;justify-self:end;max-width:190px;padding:8px 10px;
+    border:1px solid var(--c200);border-radius:9px;background:#fff;color:var(--c800);
+    font-family:var(--font-sans);font-size:.875rem;font-weight:600;box-shadow:var(--shadow-sm);
+  }
+  .topnav__mobile-current span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topnav__actions{
+    grid-column:1 / -1;width:100%;display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:center;
+  }
+  .topnav__search{grid-column:1 / -1;min-width:0}
+  .topnav__search-input{width:100%;height:40px;background:#fff}
+  .topnav__mobile-filter{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;
+    width:100%;padding:0 11px;border:1px solid var(--c200);border-radius:9px;background:#fff;
+    color:var(--c700);font-family:var(--font-sans);font-size:.8125rem;font-weight:600;
+    white-space:nowrap;cursor:pointer;
+  }
+  .topnav__role{display:none!important}
+  .topnav__btn{height:40px;width:100%;padding:0 10px;border-radius:9px;font-size:.8125rem}
+  .topnav__logout{height:40px;width:100%;padding:0 10px;border-radius:9px;font-size:.8125rem;background:#fff}
+  .topnav__password{display:none!important}
+  .sidebar{display:none}
   .sidebar--open{left:0}
-  .main{padding:var(--s6)}
+  .main{padding:var(--s6) var(--s4)}
+  .layout{margin-top:var(--topnav-h);height:calc(100vh - var(--topnav-h));height:calc(100dvh - var(--topnav-h))}
   .notes-grid{grid-template-columns:1fr}
-  .topnav__search-input{width:140px}
+  .content-header{margin-bottom:var(--s6)}
+  .content-header__title{font-size:1.75rem}
+  .stats-bar{gap:var(--s3)}
+  .toc{display:none!important}
+  .overlay{z-index:205;background:rgb(0 0 0/.32)}
+  .mobile-sheet-open .main{overflow:hidden}
   .modal{max-width:95vw;max-height:90vh}
+  .modal__body{padding:var(--s4)}
+  .modal__toolbar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  .modal__view-toggle{margin-left:0}
+  .markdown-editor{grid-template-columns:1fr}
+  .markdown-editor--split .markdown-preview{display:none}
+  .markdown-editor--preview .markdown-preview{display:block}
+  .markdown-editor--preview .markdown-source{display:none}
+  .modal__textarea,.markdown-preview{min-height:360px;max-height:420px}
+  .markdown-status{gap:var(--s2)}
   .page-view{max-width:100%}
 }
 .overlay{position:fixed;inset:0;background:rgb(0 0 0/.2);z-index:49;display:none}
 .overlay--active{display:block}
+.mobile-sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:210;
+  max-height:78vh;background:#fff;border-radius:18px 18px 0 0;
+  box-shadow:0 -20px 60px rgb(0 0 0/.16);
+  transform:translateY(105%);transition:transform .25s var(--ease);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.mobile-sheet--active{transform:translateY(0)}
+.mobile-sheet__handle{width:42px;height:4px;border-radius:999px;background:var(--c300);margin:10px auto 6px}
+.mobile-sheet__header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s3) var(--s5) var(--s4);border-bottom:1px solid var(--c100);
+}
+.mobile-sheet__title{font-size:1rem;font-weight:700;color:var(--c900)}
+.mobile-sheet__close{
+  width:32px;height:32px;border:1px solid var(--c200);background:var(--c50);
+  border-radius:8px;color:var(--c600);cursor:pointer;font-size:18px;
+}
+.mobile-sheet__body{overflow-y:auto;padding:var(--s4) var(--s5) var(--s6)}
+.mobile-sheet__section{margin-bottom:var(--s5)}
+.mobile-sheet__label{
+  margin-bottom:var(--s2);font-size:.75rem;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--c400);
+}
+.mobile-sheet__item{
+  width:100%;min-height:44px;display:flex;align-items:center;gap:var(--s3);
+  padding:var(--s3);border:1px solid transparent;border-radius:10px;
+  background:transparent;color:var(--c700);font-family:var(--font-sans);
+  font-size:.9375rem;text-align:left;cursor:pointer;
+}
+.mobile-sheet__item:hover{background:var(--c50)}
+.mobile-sheet__item--active{background:var(--a50);border-color:var(--a200);color:var(--a800);font-weight:600}
+.mobile-sheet__item-count{
+  margin-left:auto;min-width:24px;text-align:center;padding:1px 8px;
+  border-radius:999px;background:var(--c100);color:var(--c500);font-size:.75rem;font-weight:600;
+}
+.mobile-sheet__item--active .mobile-sheet__item-count{background:var(--a100);color:var(--a700)}
+.mobile-sheet__item-actions{margin-left:auto;display:flex;gap:6px}
+.mobile-sheet__icon-btn{
+  width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--c200);border-radius:8px;background:#fff;color:var(--c500);cursor:pointer;
+}
+.mobile-sheet__icon-btn:hover{background:var(--c100);color:var(--c800)}
+.mobile-sheet__icon-btn--danger:hover{background:#fef2f2;color:var(--err);border-color:#fecaca}
+.mobile-sheet__add{
+  width:100%;display:none;align-items:center;justify-content:center;gap:var(--s2);
+  margin-top:var(--s2);padding:var(--s3);border:1px dashed var(--a300);
+  border-radius:10px;background:var(--a50);color:var(--a700);font-weight:600;cursor:pointer;
+}
+.mobile-sheet__tag-grid{display:flex;flex-wrap:wrap;gap:8px}
+.mobile-sheet__tag{
+  display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:5px 10px;
+  border:1px solid var(--c200);border-radius:999px;background:#fff;color:var(--c700);
+  font-family:var(--font-sans);font-size:.875rem;cursor:pointer;
+}
+.mobile-sheet__tag--active{background:var(--a50);border-color:var(--a300);color:var(--a800);font-weight:600}
+.mobile-sheet-open{overflow:hidden}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 </style>
 </head>
@@ -377,21 +545,59 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
     <div class="topnav__logo">N</div>
     <span class="topnav__title">NoteFlow</span>
   </a>
+  <button class="topnav__mobile-current" id="mobileNotebookBtn" onclick="App.openNotebookSheet()" type="button" aria-label="Switch notebook">
+    <span id="mobileNotebookLabel">Docs</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+  </button>
   <div class="topnav__menu" id="topMenu">
     <!-- Dynamically rendered -->
   </div>
   <div class="topnav__actions">
     <div class="topnav__search">
       <svg class="topnav__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="search" class="topnav__search-input" id="searchInput" placeholder="搜索笔记..." oninput="App.filter()">
+      <input type="search" class="topnav__search-input" id="searchInput" placeholder="搜索笔记..." aria-label="搜索笔记" oninput="App.filter()">
     </div>
+    <button class="topnav__mobile-filter" id="mobileFilterBtn" onclick="App.openFilterSheet()" type="button">筛选</button>
     <span class="topnav__role" id="roleBadge" style="display:none"></span>
     <button class="topnav__btn" id="newNoteBtn" style="display:none" onclick="App.openNoteModal()">+ 新建笔记</button>
+    <button class="topnav__password" id="passwordBtn" style="display:none" onclick="App.openPasswordModal()" type="button">修改密码</button>
     <button class="topnav__logout" id="logoutBtn" style="display:none" onclick="App.logout()" title="输入编辑密码">编辑登录</button>
   </div>
 </nav>
 
-<div class="overlay" id="sidebarOverlay" onclick="App.toggleSidebar()"></div>
+<div class="overlay" id="sidebarOverlay" onclick="App.closeMobileSheets()"></div>
+
+<section class="mobile-sheet" id="notebookSheet" aria-label="Notebooks">
+  <div class="mobile-sheet__handle"></div>
+  <div class="mobile-sheet__header">
+    <div class="mobile-sheet__title">笔记本</div>
+    <button class="mobile-sheet__close" onclick="App.closeNotebookSheet()" type="button">×</button>
+  </div>
+  <div class="mobile-sheet__body">
+    <div id="mobileNotebookList"></div>
+    <button class="mobile-sheet__add" id="mobileAddNotebookBtn" onclick="App.addMenu()" type="button">+ 新建 Notebook</button>
+    <button class="mobile-sheet__add" id="mobilePasswordBtn" onclick="App.openPasswordModal()" type="button">修改编辑密码</button>
+  </div>
+</section>
+
+<section class="mobile-sheet" id="filterSheet" aria-label="Filters">
+  <div class="mobile-sheet__handle"></div>
+  <div class="mobile-sheet__header">
+    <div class="mobile-sheet__title">筛选</div>
+    <button class="mobile-sheet__close" onclick="App.closeFilterSheet()" type="button">×</button>
+  </div>
+  <div class="mobile-sheet__body">
+    <div class="mobile-sheet__section">
+      <div class="mobile-sheet__label">分类</div>
+      <div id="mobileFilterList"></div>
+      <button class="mobile-sheet__add" id="mobileAddCategoryBtn" onclick="App.addCategory()" type="button" style="display:none">+ 新建分类</button>
+    </div>
+    <div class="mobile-sheet__section">
+      <div class="mobile-sheet__label">标签</div>
+      <div class="mobile-sheet__tag-grid" id="mobileTagsList"></div>
+    </div>
+  </div>
+</section>
 
 <!-- Layout -->
 <div class="layout">
@@ -402,14 +608,8 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         所有笔记 <span class="sidebar__count" id="countAll">0</span>
       </a>
-      <a class="sidebar__item" data-filter="work" onclick="App.setFilter('work',this)">
-        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        工作知识 <span class="sidebar__count" id="countWork">0</span>
-      </a>
-      <a class="sidebar__item" data-filter="learn" onclick="App.setFilter('learn',this)">
-        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        学习资料 <span class="sidebar__count" id="countLearn">0</span>
-      </a>
+      <div id="categoryList"></div>
+      <button class="sidebar__add-btn" id="addCategoryBtn" type="button" onclick="App.addCategory()" style="display:none">+ 新建分类</button>
       <a class="sidebar__item" data-filter="star" onclick="App.setFilter('star',this)">
         <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         收藏夹 <span class="sidebar__count" id="countStar">0</span>
@@ -442,7 +642,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 </div>
 
 <!-- New/Edit Note Modal -->
-<div class="modal-overlay" id="noteModal">
+<div class="modal-overlay" id="noteModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <div class="modal__header">
       <h3 class="modal__title" id="modalTitle">新建笔记</h3>
@@ -451,33 +651,61 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
     <div class="modal__body">
       <div class="modal__field">
         <label class="modal__label">标题</label>
-        <input class="modal__input" id="noteTitle" placeholder="输入笔记标题...">
+        <input class="modal__input" id="noteTitle" placeholder="输入笔记标题..." oninput="App.scheduleAutosave()">
       </div>
       <div style="display:flex;gap:var(--s5)">
         <div class="modal__field" style="flex:1">
           <label class="modal__label">分类</label>
-          <select class="modal__select" id="noteCategory">
+          <select class="modal__select" id="noteCategory" onchange="App.scheduleAutosave()">
             <option value="work">工作</option>
             <option value="learn">学习</option>
           </select>
         </div>
         <div class="modal__field" style="flex:1">
           <label class="modal__label">标签（逗号分隔）</label>
-          <input class="modal__input" id="noteTags" placeholder="例如: frontend, react">
+          <input class="modal__input" id="noteTags" placeholder="例如: frontend, react" oninput="App.scheduleAutosave()">
         </div>
       </div>
       <div class="modal__field">
         <label class="modal__label">内容（支持 Markdown）</label>
         <div class="modal__toolbar">
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('h1')" title="一级标题 Ctrl+Alt+1">H1</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('h2')" title="二级标题 Ctrl+Alt+2">H2</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('h3')" title="三级标题 Ctrl+Alt+3">H3</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('bold')" title="粗体 Ctrl+B">B</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('italic')" title="斜体 Ctrl+I">I</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('quote')" title="引用">”</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('ul')" title="无序列表">UL</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('ol')" title="有序列表">OL</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('task')" title="任务列表 Ctrl+Shift+X">☑</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('inlineCode')" title="行内代码">`</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('codeBlock')" title="代码块 Ctrl+Shift+C">{ }</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('table')" title="表格">表</button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.applyMarkdownFormat('link')" title="链接 Ctrl+K">🔗</button>
           <button type="button" class="modal__tool-btn" onclick="App.uploadImage()" title="上传并插入图片（单张 ≤ 5MB）">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             插入图片
           </button>
+          <button type="button" class="modal__tool-btn modal__tool-btn--icon" onclick="App.openShortcutModal()" title="快捷键 Ctrl+/">?</button>
+          <div class="modal__view-toggle" aria-label="编辑器视图">
+            <button type="button" class="modal__view-btn modal__view-btn--active" data-editor-mode="split" onclick="App.setEditorMode('split')">分屏</button>
+            <button type="button" class="modal__view-btn" data-editor-mode="write" onclick="App.setEditorMode('write')">只写</button>
+            <button type="button" class="modal__view-btn" data-editor-mode="preview" onclick="App.setEditorMode('preview')">预览</button>
+          </div>
           <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="App.handleImageSelected(event)">
         </div>
-        <div class="markdown-editor">
-          <textarea class="modal__textarea" id="noteContent" oninput="App.updateMarkdownPreview()" placeholder="在此编写笔记内容...&#10;&#10;支持 Markdown 格式：&#10;# 一级标题&#10;## 二级标题&#10;**粗体** *斜体*&#10;- 列表项&#10;```代码块```"></textarea>
+        <div class="markdown-editor markdown-editor--split" id="markdownEditor">
+          <div class="markdown-source">
+            <textarea class="modal__textarea" id="noteContent" oninput="App.updateMarkdownPreview()" onkeydown="App.handleEditorKeydown(event)" onpaste="App.handleEditorPaste(event)" ondrop="App.handleEditorDrop(event)" ondragover="event.preventDefault()" placeholder="在此编写笔记内容...&#10;&#10;支持 Markdown 格式：&#10;# 一级标题&#10;## 二级标题&#10;**粗体** *斜体*&#10;- 列表项&#10;```代码块```"></textarea>
+          </div>
           <div class="markdown-preview" id="markdownPreview" aria-live="polite"></div>
+        </div>
+        <div class="markdown-status" id="markdownStatus">
+          <span id="markdownWords">0 字</span>
+          <span id="markdownLines">0 行</span>
+          <span id="markdownReadTime">1 min 阅读</span>
+          <span id="markdownNotebook">Docs</span>
+          <span id="markdownAutosave">新笔记尚未保存</span>
         </div>
         <div class="modal__hint">💡 支持 Markdown 语法：标题、粗体、斜体、列表、代码块、表格、图片</div>
       </div>
@@ -486,6 +714,57 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
       <button class="btn btn--danger" id="modalDeleteBtn" style="display:none;margin-right:auto" onclick="App.deleteNote()">删除笔记</button>
       <button class="btn btn--secondary" onclick="App.closeModal()">取消</button>
       <button class="btn btn--primary" id="modalSaveBtn" onclick="App.saveNote()">保存笔记</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shortcuts Modal -->
+<div class="modal-overlay" id="shortcutModal" role="dialog" aria-modal="true" aria-label="快捷键">
+  <div class="modal" style="max-width:520px">
+    <div class="modal__header">
+      <h3 class="modal__title">快捷键</h3>
+      <button class="modal__close" onclick="App.closeShortcutModal()">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="shortcut-grid">
+        <div class="shortcut-row"><span>保存并继续编辑</span><kbd class="shortcut-key">Ctrl/Cmd + S</kbd></div>
+        <div class="shortcut-row"><span>保存并关闭</span><kbd class="shortcut-key">Ctrl/Cmd + Enter</kbd></div>
+        <div class="shortcut-row"><span>一级 / 二级 / 三级标题</span><kbd class="shortcut-key">Ctrl/Cmd + Alt + 1/2/3</kbd></div>
+        <div class="shortcut-row"><span>粗体 / 斜体 / 链接</span><kbd class="shortcut-key">Ctrl/Cmd + B/I/K</kbd></div>
+        <div class="shortcut-row"><span>有序 / 无序列表</span><kbd class="shortcut-key">Ctrl/Cmd + Shift + 7/8</kbd></div>
+        <div class="shortcut-row"><span>代码块 / 任务列表</span><kbd class="shortcut-key">Ctrl/Cmd + Shift + C/X</kbd></div>
+        <div class="shortcut-row"><span>切换预览模式</span><kbd class="shortcut-key">Ctrl/Cmd + Shift + P</kbd></div>
+        <div class="shortcut-row"><span>缩进 / 反缩进</span><kbd class="shortcut-key">Tab / Shift + Tab</kbd></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal-overlay" id="passwordModal" role="dialog" aria-modal="true" aria-label="修改编辑密码">
+  <div class="modal" style="max-width:420px">
+    <div class="modal__header">
+      <h3 class="modal__title">修改编辑密码</h3>
+      <button class="modal__close" onclick="App.closePasswordModal()">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="modal__field">
+        <label class="modal__label">当前密码</label>
+        <input class="modal__input" id="currentPasswordKey" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="输入当前 6 位密码">
+      </div>
+      <div class="modal__field">
+        <label class="modal__label">新密码</label>
+        <input class="modal__input" id="newPasswordKey" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="输入新的 6 位数字">
+      </div>
+      <div class="modal__field">
+        <label class="modal__label">确认新密码</label>
+        <input class="modal__input" id="confirmPasswordKey" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="再次输入新密码" onkeydown="if(event.key==='Enter'){event.preventDefault();App.changePassword()}">
+      </div>
+      <div class="modal__hint">修改后当前设备会自动切换到新密码，其它设备需要重新输入。</div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" onclick="App.closePasswordModal()">取消</button>
+      <button class="btn btn--primary" onclick="App.changePassword()">保存新密码</button>
     </div>
   </div>
 </div>
@@ -505,10 +784,11 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="loading-bar" id="loadingBar" style="width:0"></div>
 
-<script src="config.js?v=20260723"></script>
-<script src="app.js?v=20260723-viewer-mode"></script>
+<script src="config.js?v=20260726-categories"></script>
+<script type="module" src="/src/markdown-runtime.js"></script>
+<script src="app.js?v=20260726-cookie-auth"></script>
 </body>
 </html>

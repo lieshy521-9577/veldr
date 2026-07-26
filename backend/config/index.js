@@ -37,8 +37,6 @@ export const config = {
   cms: {
     dataDir: env('CMS_DATA_DIR', 'public/data/cms'),
     dbFile: env('CMS_DB_FILE', 'db.json'),
-    secretFile: env('CMS_SECRET_FILE', 'secret.json'),
     uploadDir: env('CMS_UPLOAD_DIR', 'public/uploads/cms'),
-    editorPassword: process.env.CMS_EDITOR_PASSWORD || null,
   },
 };

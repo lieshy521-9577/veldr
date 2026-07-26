@@ -2,6 +2,8 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import morgan from 'morgan';
+import helmet from 'helmet';
+import compression from 'compression';
 import methodOverride from 'method-override';
 import { sequelize } from './config/databases.js';
 import apiRoutes from './routes/index.js';
@@ -17,18 +19,31 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = config.port;
 
+// Behind nginx in production: needed for correct client IPs (rate limiting)
+if (config.nodeEnv === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Middleware
+app.use(helmet({
+  // API serves cross-origin frontends; images are embedded from other origins
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+}));
+app.use(compression());
 app.use(express.json({ limit: '20mb' })); // 增加JSON限制以支持更大的请求
 app.use(express.urlencoded({ extended: true, limit: '20mb' })); // 增加URL编码限制
 app.use(methodOverride('_method'));
-app.use(morgan('dev'));
+app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev', {
+  skip: (req) => req.path === '/api/health',
+}));
 app.use(cors({ origin: config.cors.origin, credentials: true }));
 app.use(cookieParser());
 
-// Static folders
-// app.use(express.static(path.join(__dirname, '../public')));
+// Static folders — uploaded filenames are unique, so long immutable caching is safe
+const staticCacheOptions = { maxAge: '30d', immutable: true };
 app.use('/uploads/cms', cmsUploads);
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), staticCacheOptions));
 
 // API Routes
 app.use('/api', apiRoutes);

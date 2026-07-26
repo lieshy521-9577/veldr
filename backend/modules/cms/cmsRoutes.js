@@ -2,15 +2,58 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { attachAuthState } from '../../middleware/auth.js';
+import rateLimit from 'express-rate-limit';
+import { attachAuthState, clearAuthCookie } from '../../middleware/auth.js';
+import { asyncHandler } from '../../middleware/errorHandler.js';
 import { loadDB, persistDB, nextId, normalizeTags, uploadDir } from './cmsStore.js';
-import { authenticateCms, requireEditor, requireViewer } from './cmsAuth.js';
+import { authenticateCms, setSharedEditorPassword, verifyEditorPassword, requireEditor, requireViewer } from './cmsAuth.js';
 
 const router = express.Router();
 
 const send = (res, status, data) => res.status(status).json(data);
 
+// Async middleware/handlers must be wrapped so rejections reach errorHandler
+// instead of becoming unhandled rejections (which kill the process in server.js)
+const viewer = asyncHandler(requireViewer);
+const editor = asyncHandler(requireEditor);
+
+const cmsAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please try again later.' },
+});
+
 const allowedImages = /^image\/(png|jpe?g|gif|webp|svg\+xml|avif|bmp)$/i;
+const nowIso = () => new Date().toISOString();
+const noteVersion = (note) => Number(note.version) || 1;
+const safeCategoryId = (label) => String(label || '')
+  .trim()
+  .toLowerCase()
+  .replace(/[^a-z0-9一-龥]+/g, '-')
+  .replace(/^-+|-+$/g, '')
+  || `category-${Date.now()}`;
+
+const markdownExcerpt = (content) => String(content || '')
+  .replace(/```[\s\S]*?```/g, ' ')
+  .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+  .replace(/^#{1,6}\s+/gm, '')
+  .replace(/^\s*[-*+]\s+/gm, '')
+  .replace(/^\s*\d+\.\s+/gm, '')
+  .replace(/^\s*>\s?/gm, '')
+  .replace(/[*_`~|[\]()]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .slice(0, 120);
+
+const normalizeNoteMeta = (note) => ({
+  version: noteVersion(note),
+  createdAt: note.createdAt || (note.date ? `${note.date}T00:00:00.000Z` : nowIso()),
+  updatedAt: note.updatedAt || (note.date ? `${note.date}T00:00:00.000Z` : nowIso()),
+});
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -33,15 +76,39 @@ const upload = multer({
 
 router.use(attachAuthState);
 
-router.post('/auth', authenticateCms);
+router.post('/auth', cmsAuthLimiter, asyncHandler(authenticateCms));
 
-router.get('/me', requireViewer, (req, res) => {
+router.post('/logout', (req, res) => {
+  clearAuthCookie(res);
+  send(res, 200, { ok: true });
+});
+
+router.get('/me', viewer, (req, res) => {
   send(res, 200, { role: req.cmsRole });
 });
 
-router.get('/notes', requireViewer, async (req, res) => {
+router.put('/password', editor, asyncHandler(async (req, res) => {
+  const currentKey = String(req.body?.currentKey || '').trim();
+  const nextKey = String(req.body?.newKey || '').trim();
+
+  if (!await verifyEditorPassword(currentKey)) {
+    return send(res, 401, { error: 'Current editor password is incorrect' });
+  }
+  if (!/^\d{6}$/.test(nextKey)) {
+    return send(res, 400, { error: 'New editor password must be 6 digits' });
+  }
+  if (currentKey === nextKey) {
+    return send(res, 400, { error: 'New editor password must be different' });
+  }
+
+  await setSharedEditorPassword(nextKey);
+  clearAuthCookie(res);
+  return send(res, 200, { ok: true });
+}));
+
+router.get('/notes', viewer, asyncHandler(async (req, res) => {
   const db = await loadDB();
-  let notes = [...db.notes];
+  let notes = db.notes.map(note => ({ ...note, ...normalizeNoteMeta(note) }));
   const { category, tag, search, star, notebookId } = req.query;
 
   if (notebookId) notes = notes.filter(note => note.notebookId === notebookId);
@@ -59,16 +126,16 @@ router.get('/notes', requireViewer, async (req, res) => {
   }
 
   send(res, 200, notes);
-});
+}));
 
-router.get('/notes/:id', requireViewer, async (req, res) => {
+router.get('/notes/:id', viewer, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const note = db.notes.find(item => item.id === Number(req.params.id));
   if (!note) return send(res, 404, { error: 'Note not found' });
-  return send(res, 200, note);
-});
+  return send(res, 200, { ...note, ...normalizeNoteMeta(note) });
+}));
 
-router.post('/notes', requireEditor, async (req, res) => {
+router.post('/notes', editor, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const body = req.body || {};
   if (!body.title || !body.content) {
@@ -76,6 +143,7 @@ router.post('/notes', requireEditor, async (req, res) => {
   }
 
   const content = String(body.content);
+  const timestamp = nowIso();
   const note = {
     id: nextId(db.notes),
     title: String(body.title),
@@ -84,17 +152,20 @@ router.post('/notes', requireEditor, async (req, res) => {
     tags: normalizeTags(body.tags),
     date: body.date || new Date().toISOString().split('T')[0],
     readTime: body.readTime || `${Math.max(1, Math.ceil(content.length / 500))} min`,
-    excerpt: body.excerpt || content.replace(/[#*`\n]/g, '').substring(0, 120).trim(),
+    excerpt: body.excerpt || markdownExcerpt(content),
     starred: Boolean(body.starred),
     content,
+    version: 1,
+    createdAt: timestamp,
+    updatedAt: timestamp,
   };
 
   db.notes.unshift(note);
   await persistDB();
   return send(res, 201, note);
-});
+}));
 
-router.put('/notes/:id', requireEditor, async (req, res) => {
+router.put('/notes/:id', editor, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const id = Number(req.params.id);
   const index = db.notes.findIndex(note => note.id === id);
@@ -102,7 +173,17 @@ router.put('/notes/:id', requireEditor, async (req, res) => {
 
   const body = req.body || {};
   const current = db.notes[index];
+  const currentVersion = noteVersion(current);
+  if (!body.force && body.version !== undefined && Number(body.version) !== currentVersion) {
+    return send(res, 409, {
+      error: 'Note was updated on another device',
+      code: 'VERSION_CONFLICT',
+      current: { ...current, ...normalizeNoteMeta(current) },
+    });
+  }
+
   const content = body.content !== undefined ? String(body.content) : current.content;
+  const timestamp = nowIso();
   const updated = {
     ...current,
     title: body.title !== undefined ? String(body.title) : current.title,
@@ -110,18 +191,21 @@ router.put('/notes/:id', requireEditor, async (req, res) => {
     notebookId: body.notebookId !== undefined ? body.notebookId || null : current.notebookId || null,
     tags: body.tags !== undefined ? normalizeTags(body.tags) : current.tags,
     content,
-    excerpt: body.excerpt !== undefined ? body.excerpt : current.excerpt,
+    excerpt: body.excerpt !== undefined ? body.excerpt : (body.content !== undefined ? markdownExcerpt(content) : current.excerpt),
     starred: body.starred !== undefined ? Boolean(body.starred) : current.starred,
     date: body.date !== undefined ? body.date : current.date,
     readTime: body.readTime !== undefined ? body.readTime : current.readTime,
+    version: currentVersion + 1,
+    createdAt: current.createdAt || timestamp,
+    updatedAt: timestamp,
   };
 
   db.notes[index] = updated;
   await persistDB();
   return send(res, 200, updated);
-});
+}));
 
-router.delete('/notes/:id', requireEditor, async (req, res) => {
+router.delete('/notes/:id', editor, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const id = Number(req.params.id);
   const before = db.notes.length;
@@ -129,14 +213,67 @@ router.delete('/notes/:id', requireEditor, async (req, res) => {
   if (db.notes.length === before) return send(res, 404, { error: 'Note not found' });
   await persistDB();
   return send(res, 200, { ok: true });
-});
+}));
 
-router.get('/menus', requireViewer, async (req, res) => {
+router.get('/categories', viewer, asyncHandler(async (req, res) => {
+  const db = await loadDB();
+  return send(res, 200, db.categories);
+}));
+
+router.post('/categories', editor, asyncHandler(async (req, res) => {
+  const db = await loadDB();
+  const label = String(req.body?.label || '').trim();
+  if (!label) return send(res, 400, { error: 'Category label is required' });
+
+  const baseId = safeCategoryId(label);
+  let id = baseId;
+  let suffix = 2;
+  while (db.categories.some(category => category.id === id)) {
+    id = `${baseId}-${suffix}`;
+    suffix += 1;
+  }
+
+  const category = { id, label };
+  db.categories.push(category);
+  await persistDB();
+  return send(res, 201, category);
+}));
+
+router.put('/categories/:id', editor, asyncHandler(async (req, res) => {
+  const db = await loadDB();
+  const index = db.categories.findIndex(category => category.id === req.params.id);
+  if (index === -1) return send(res, 404, { error: 'Category not found' });
+
+  const label = String(req.body?.label || '').trim();
+  if (!label) return send(res, 400, { error: 'Category label is required' });
+
+  db.categories[index] = { ...db.categories[index], label };
+  await persistDB();
+  return send(res, 200, db.categories[index]);
+}));
+
+router.delete('/categories/:id', editor, asyncHandler(async (req, res) => {
+  const db = await loadDB();
+  const { id } = req.params;
+  if (db.categories.length <= 1) return send(res, 400, { error: 'At least one category is required' });
+  const index = db.categories.findIndex(category => category.id === id);
+  if (index === -1) return send(res, 404, { error: 'Category not found' });
+
+  const fallback = db.categories.find(category => category.id !== id)?.id || 'work';
+  db.categories = db.categories.filter(category => category.id !== id);
+  db.notes = db.notes.map(note => (
+    note.category === id ? { ...note, category: fallback } : note
+  ));
+  await persistDB();
+  return send(res, 200, { ok: true, fallback });
+}));
+
+router.get('/menus', viewer, asyncHandler(async (req, res) => {
   const db = await loadDB();
   return send(res, 200, db.menus);
-});
+}));
 
-router.post('/menus', requireEditor, async (req, res) => {
+router.post('/menus', editor, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const body = req.body || {};
   const label = String(body.label || '').trim();
@@ -153,9 +290,9 @@ router.post('/menus', requireEditor, async (req, res) => {
   db.menus.push(menu);
   await persistDB();
   return send(res, 201, menu);
-});
+}));
 
-router.put('/menus/:id', requireEditor, async (req, res) => {
+router.put('/menus/:id', editor, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const index = db.menus.findIndex(menu => menu.id === req.params.id);
   if (index === -1) return send(res, 404, { error: 'Menu not found' });
@@ -170,9 +307,9 @@ router.put('/menus/:id', requireEditor, async (req, res) => {
   };
   await persistDB();
   return send(res, 200, db.menus[index]);
-});
+}));
 
-router.delete('/menus/:id', requireEditor, async (req, res) => {
+router.delete('/menus/:id', editor, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const { id } = req.params;
   if (id === 'docs') return send(res, 400, { error: 'The docs menu cannot be deleted' });
@@ -185,9 +322,9 @@ router.delete('/menus/:id', requireEditor, async (req, res) => {
   ));
   await persistDB();
   return send(res, 200, { ok: true });
-});
+}));
 
-router.post('/upload', requireEditor, (req, res) => {
+router.post('/upload', editor, (req, res) => {
   upload.single('image')(req, res, (error) => {
     if (error) return send(res, 400, { error: error.message || 'Upload failed' });
     if (!req.file) return send(res, 400, { error: 'No file selected' });

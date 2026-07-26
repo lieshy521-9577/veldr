@@ -46,14 +46,20 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    esbuild: {
+      drop: mode === 'production' ? ['console', 'debugger'] : [],
+    },
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: mode === 'development',
       rollupOptions: {
-        input: {
-          main: path.resolve(__dirname, 'index.html')
-        }
+        output: {
+          manualChunks: {
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+            'ui-vendor': ['vue-toastification', 'date-fns'],
+          },
+        },
       }
     },
     publicDir: 'public',

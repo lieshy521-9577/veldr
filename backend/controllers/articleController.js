@@ -120,10 +120,8 @@ const getArticleBySlug = async (req, res) => {
 // Create a new article
 const createArticle = async (req, res) => {
   try {
-    console.log('📥 createArticle controller received:', req.body);
     const { title, slug, content, excerpt, status } = req.body;
     const featuredImage = req.file ? handleFileUpload(req.file) : null;
-    console.log('📤 Calling service with:', { title, slug, content, excerpt, status, featuredImage });
     const article = await svcCreate({ title, slug, content, excerpt, status, featuredImage });
     res.status(201).json({ success: true, message: 'Article created successfully', data: article });
   } catch (error) {
@@ -138,13 +136,10 @@ const updateArticle = async (req, res) => {
     const { id } = req.params;
     const { title, slug, content, excerpt, status } = req.body;
     const newFile = req.file ? handleFileUpload(req.file) : null;
-    
-    console.log('Update article request:', { id, title, slug, content, excerpt, status, hasFile: !!newFile });
-    
+
     const article = await svcUpdate(id, { title, slug, content, excerpt, status, newFile });
     if (!article) return res.status(404).json({ success: false, message: 'Article not found' });
-    
-    console.log('Article updated successfully:', article);
+
     res.json({ success: true, message: 'Article updated successfully', data: article });
   } catch (error) {
     console.error('Error updating article:', error);

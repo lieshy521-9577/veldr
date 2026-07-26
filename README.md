@@ -92,10 +92,7 @@ Backend:
 | `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin |
 | `CMS_DATA_DIR` | `public/data/cms` | JSON data directory for the CMS module |
 | `CMS_DB_FILE` | `db.json` | CMS JSON database filename |
-| `CMS_SECRET_FILE` | `secret.json` | CMS generated editor secret filename |
 | `CMS_UPLOAD_DIR` | `public/uploads/cms` | CMS upload directory |
-| `CMS_VIEWER_PASSWORD` | `11` | CMS read-only access key |
-| `CMS_EDITOR_PASSWORD` | generated if empty | CMS editor access key |
 
 Frontend:
 
@@ -142,8 +139,6 @@ DB_STORAGE=public/data/cms.sqlite
 SECURITY_DB_STORAGE=public/data/security.sqlite
 CMS_DATA_DIR=public/data/cms
 CMS_UPLOAD_DIR=public/uploads/cms
-CMS_VIEWER_PASSWORD=replace-viewer-key
-CMS_EDITOR_PASSWORD=replace-editor-key
 ```
 
 ## Unified Backend Namespaces
@@ -172,6 +167,8 @@ backend/public/data/security.sqlite
 The checked-in README documents how the password system works, but not any private local password currently in use.
 
 Passwords are stored as bcrypt hashes. The backend sets an HttpOnly JWT cookie after password verification; protected write APIs require that cookie.
+
+The CMS editor password is the same six-digit password used by the Veldr admin flow. CMS does not keep a separate editor secret. A successful `POST /api/cms/auth` also issues the same HttpOnly cookie session, so the CMS frontend no longer stores the plain key in localStorage; `POST /api/cms/logout` clears the session.
 
 ## Data And Cleanup
 

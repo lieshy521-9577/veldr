@@ -6,29 +6,29 @@ const STORAGE_KEYS = {
   AUTHENTICATED: 'cms_authenticated',
 };
 
-export function usePasswordAuth() {
-  const isAuthenticated = ref(false);
+// Module-level singleton state: every component sees the same auth ref, and the
+// window listeners are registered exactly once (previously each usePasswordAuth()
+// call added two listeners that were never removed).
+const isAuthenticated = ref(false);
 
-  const initializeAuth = () => {
-    isAuthenticated.value = localStorage.getItem(STORAGE_KEYS.AUTHENTICATED) === 'true';
-  };
+const initializeAuth = () => {
+  isAuthenticated.value = localStorage.getItem(STORAGE_KEYS.AUTHENTICATED) === 'true';
+};
 
-  const handleStorageChange = (event) => {
-    if (event.key === STORAGE_KEYS.AUTHENTICATED) {
-      isAuthenticated.value = event.newValue === 'true';
-    }
-  };
-
-  const handleAuthStateChange = () => {
-    initializeAuth();
-  };
-
-  initializeAuth();
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('authStateChanged', handleAuthStateChange);
+const handleStorageChange = (event) => {
+  if (event.key === STORAGE_KEYS.AUTHENTICATED) {
+    isAuthenticated.value = event.newValue === 'true';
   }
+};
+
+initializeAuth();
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', handleStorageChange);
+  window.addEventListener('authStateChanged', initializeAuth);
+}
+
+export function usePasswordAuth() {
 
   const markAuthenticated = () => {
     isAuthenticated.value = true;

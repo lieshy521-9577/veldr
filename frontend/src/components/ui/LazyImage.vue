@@ -4,7 +4,9 @@
       v-if="hasIntersected || !lazy"
       :src="src"
       :alt="alt"
-      :class="['lazy-image', { 'loaded': hasIntersected }]"
+      :class="['lazy-image', { 'loaded': isLoaded }]"
+      loading="lazy"
+      decoding="async"
       @load="onLoad"
       @error="onError"
     />
@@ -18,7 +20,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useLazyLoading } from '@/composables/useLazyLoading.js';
 
 const props = defineProps({
@@ -51,11 +53,6 @@ const { element: container, hasIntersected } = useLazyLoading({
 // Local state
 const isLoaded = ref(false);
 const hasError = ref(false);
-
-// Computed properties
-const shouldShowImage = computed(() => {
-  return hasIntersected.value || !props.lazy;
-});
 
 // Event handlers
 const onLoad = (event) => {

@@ -1,4 +1,3 @@
-import fs from 'fs';
 import fsp from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,13 +12,16 @@ const resolveFromBackend = (targetPath) => path.resolve(backendRoot, targetPath)
 const dataDir = resolveFromBackend(config.cms.dataDir);
 const uploadDir = resolveFromBackend(config.cms.uploadDir);
 const dbFile = path.join(dataDir, config.cms.dbFile);
-const secretFile = path.join(dataDir, config.cms.secretFile);
 
 let db = null;
 let writeChain = Promise.resolve();
 
 const defaultDB = () => ({
   notes: [],
+  categories: [
+    { id: 'work', label: '工作' },
+    { id: 'learn', label: '学习' },
+  ],
   menus: [
     { id: 'docs', label: 'Docs', type: 'docs' },
   ],
@@ -44,6 +46,7 @@ const loadDB = async () => {
   }
 
   if (!Array.isArray(db.notes)) db.notes = [];
+  if (!Array.isArray(db.categories)) db.categories = defaultDB().categories;
   if (!Array.isArray(db.menus)) db.menus = [];
   return db;
 };
@@ -53,11 +56,15 @@ const persistDB = async () => {
   const tmp = `${dbFile}.tmp`;
   const json = JSON.stringify(db || defaultDB(), null, 2);
 
-  writeChain = writeChain
+  // .catch(() => {}) keeps one failed write from poisoning every later persist;
+  // the failure still rejects this call's returned promise below
+  const write = writeChain
+    .catch(() => {})
     .then(() => fsp.writeFile(tmp, json))
     .then(() => fsp.rename(tmp, dbFile));
 
-  return writeChain;
+  writeChain = write;
+  return write;
 };
 
 const resetDBForTests = (nextDB = null) => {
@@ -73,29 +80,13 @@ const normalizeTags = (tags) => {
   return [];
 };
 
-const readSecret = () => {
-  try {
-    return JSON.parse(fs.readFileSync(secretFile, 'utf8'));
-  } catch {
-    return null;
-  }
-};
-
-const writeSecret = async (secret) => {
-  await ensureRuntimeDirs();
-  await fsp.writeFile(secretFile, JSON.stringify(secret, null, 2));
-};
-
 export {
   dataDir,
   uploadDir,
   dbFile,
-  secretFile,
   loadDB,
   persistDB,
   resetDBForTests,
   nextId,
   normalizeTags,
-  readSecret,
-  writeSecret,
 };

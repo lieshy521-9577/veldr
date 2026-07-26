@@ -6,7 +6,8 @@ import { uploadDir } from './cmsStore.js';
 const cmsUploads = [
   attachAuthState,
   requireViewer,
-  express.static(uploadDir),
+  // Uploaded filenames are unique, so long immutable caching is safe
+  express.static(uploadDir, { maxAge: '30d', immutable: true }),
 ];
 
 export { cmsUploads };

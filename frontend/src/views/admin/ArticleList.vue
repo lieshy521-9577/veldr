@@ -70,7 +70,11 @@
           </div>
         </div>
 
-        <div class="table-responsive">
+        <div v-if="filteredArticles.length === 0" class="state-panel">
+          <p class="text-muted">No notes match the current search or filter.</p>
+        </div>
+
+        <div v-else class="table-responsive">
           <table class="table">
             <thead>
               <tr>
@@ -139,6 +143,30 @@
             </tbody>
           </table>
         </div>
+
+        <div v-if="pagination.totalPages > 1" class="pagination-bar">
+          <span class="pagination-info">
+            {{ pagination.total }} notes · page {{ pagination.page }} / {{ pagination.totalPages }}
+          </span>
+          <div class="pagination-controls">
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              :disabled="pagination.page <= 1 || loading"
+              @click="goToPage(pagination.page - 1)"
+            >
+              <i class="fas fa-chevron-left"></i>
+              Prev
+            </button>
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              :disabled="pagination.page >= pagination.totalPages || loading"
+              @click="goToPage(pagination.page + 1)"
+            >
+              Next
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -155,6 +183,10 @@ const articleStore = useArticleStore();
 
 const articles = computed(() => articleStore.articles);
 const loading = computed(() => articleStore.loading);
+const pagination = computed(() => articleStore.pagination);
+
+const currentPage = ref(1);
+const PAGE_SIZE = 20;
 
 const publishedCount = computed(() => {
   return articles.value.filter(article => article.status === 'published').length;
@@ -189,10 +221,23 @@ const isTogglingStatus = ref(null);
 
 const fetchArticles = async () => {
   try {
-    await articleStore.fetchArticles();
+    await articleStore.fetchArticles({ page: currentPage.value, limit: PAGE_SIZE });
+    // 删除后当前页可能为空，自动回退一页
+    if (articles.value.length === 0 && currentPage.value > 1) {
+      currentPage.value -= 1;
+      await articleStore.fetchArticles({ page: currentPage.value, limit: PAGE_SIZE });
+    }
   } catch (err) {
     toast.error('Failed to load notes');
   }
+};
+
+const goToPage = async (page) => {
+  const totalPages = pagination.value.totalPages || 1;
+  const target = Math.min(Math.max(1, page), totalPages);
+  if (target === currentPage.value) return;
+  currentPage.value = target;
+  await fetchArticles();
 };
 
 const refreshArticles = async () => {
@@ -678,5 +723,24 @@ onMounted(() => {
   .filter-controls {
     width: 100%;
   }
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 0.5rem;
 }
 </style>

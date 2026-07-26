@@ -15,17 +15,13 @@
 @use 'layouts/sidebar';
 
 // 4. UI Components
+// cards/dashboard/article/article-content 分片曾是纯 @apply 或 :deep() 无效选择器
+//（Tailwind 从未接线，浏览器一直忽略），已移除引入
 @use 'components/buttons';
 @use 'components/forms';
-@use 'components/cards';
 @use 'components/tables';
 @use 'components/modals';
 @use 'components/alerts';
-@use 'components/article-content';
-
-// 5. Page-specific styles
-@use 'pages/dashboard';
-@use 'pages/article';
 
 // 6. Theme styles
 @use 'themes/default';

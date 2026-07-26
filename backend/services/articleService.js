@@ -28,8 +28,6 @@ export const getArticle = async (id) => findById(id);
 export const getArticleBySlug = async (slug) => findBySlug(slug);
 
 export const createArticle = async ({ title, slug, content, excerpt, status, featuredImage }) => {
-  console.log('📝 createArticle called with:', { title, slug, content, excerpt, status, featuredImage });
-  
   const payload = {
     title: ensureString(title).trim(),
     slug: slug ? ensureString(slug).trim() : null,
@@ -38,9 +36,7 @@ export const createArticle = async ({ title, slug, content, excerpt, status, fea
     status: ['draft', 'private', 'published'].includes(status) ? status : 'private',
     featuredImage: featuredImage || null,
   };
-  
-  console.log('🔧 Processed payload:', payload);
-  
+
   if (!payload.title) throw new Error('Title is required');
   return repoCreate(payload);
 };
@@ -68,8 +64,7 @@ export const updateArticle = async (id, { title, slug, content, excerpt, status,
       status: status !== undefined ? (['draft', 'private', 'published'].includes(status) ? status : article.status) : article.status,
       featuredImage,
     };
-    
-    console.log('Updating article with payload:', payload);
+
     await repoUpdate(article, payload, { transaction: t });
     return article;
   });

@@ -11,7 +11,7 @@ WorkingDirectory=/opt/veldr/backend
 EnvironmentFile=-/opt/veldr/backend/.env
 Environment=NODE_ENV=production
 Environment=PORT=5000
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/local/bin/node server.js
 Restart=always
 RestartSec=10
 StandardOutput=journal

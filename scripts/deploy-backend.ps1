@@ -186,7 +186,7 @@ foreach ($server in $Servers) {
     "rm -rf veldr-backend-runtime",
     "mkdir -p veldr-backend-runtime",
     "BACKUP=`$(date +%Y%m%d-%H%M%S)",
-    "if [ -d $(Quote-Sh $remoteName) ]; then if [ -d $(Quote-Sh "$remoteName/public/data") ]; then mkdir -p veldr-backend-runtime/public; mv $(Quote-Sh "$remoteName/public/data") veldr-backend-runtime/public/data; fi; if [ -d $(Quote-Sh "$remoteName/public/uploads") ]; then mkdir -p veldr-backend-runtime/public; mv $(Quote-Sh "$remoteName/public/uploads") veldr-backend-runtime/public/uploads; fi; if [ -d $(Quote-Sh "$remoteName/temp") ]; then mv $(Quote-Sh "$remoteName/temp") veldr-backend-runtime/temp; fi; if [ -f $(Quote-Sh "$remoteName/.env") ]; then mv $(Quote-Sh "$remoteName/.env") veldr-backend-runtime/.env; fi; mv $(Quote-Sh $remoteName) $(Quote-Sh "$remoteName-`$BACKUP"); fi",
+    "if [ -d $(Quote-Sh $remoteName) ]; then if [ -d $(Quote-Sh "$remoteName/public/data") ]; then mkdir -p veldr-backend-runtime/public; mv $(Quote-Sh "$remoteName/public/data") veldr-backend-runtime/public/data; fi; if [ -d $(Quote-Sh "$remoteName/public/uploads") ]; then mkdir -p veldr-backend-runtime/public; mv $(Quote-Sh "$remoteName/public/uploads") veldr-backend-runtime/public/uploads; fi; if [ -d $(Quote-Sh "$remoteName/temp") ]; then mv $(Quote-Sh "$remoteName/temp") veldr-backend-runtime/temp; fi; if [ -f $(Quote-Sh "$remoteName/.env") ]; then mv $(Quote-Sh "$remoteName/.env") veldr-backend-runtime/.env; fi; mv $(Quote-Sh $remoteName) $(Quote-Sh $remoteName)-`$BACKUP; fi",
     "mkdir -p $(Quote-Sh $remoteName)",
     "tar -xzf $(Quote-Sh $archiveName) -C $(Quote-Sh $remoteName)",
     "rm $(Quote-Sh $archiveName)",

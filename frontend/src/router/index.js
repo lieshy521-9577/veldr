@@ -70,17 +70,6 @@ const routes = [
     }
   },
   {
-    path: '/article/:slug',
-    name: 'ArticleViewBySlug',
-    component: () => import('@/views/ArticleView.vue'),
-    props: true,
-    meta: {
-      title: 'Note | Veldr',
-      requiresAuth: false,
-      layout: 'default'
-    }
-  },
-  {
     path: '/articles',
     name: 'PrivateArticles',
     component: () => import('@/views/PrivateArticles.vue'),

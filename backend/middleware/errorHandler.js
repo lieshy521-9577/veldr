@@ -9,7 +9,7 @@ const errorHandler = (err, req, res, _next) => {
   console.error('Error:', err);
   
   // Default error status and message
-  let statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || err.status || 500;
   let message = err.message || 'Internal Server Error';
   let errors = err.errors;
   
