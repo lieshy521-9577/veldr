@@ -7,6 +7,7 @@ const clickActions = {
   'rename-menu': (App, el) => App.renameMenu(el.dataset.id),
   'delete-menu': (App, el) => App.deleteMenu(el.dataset.id),
   'set-filter': (App, el) => App.setFilterFromElement(el),
+  'add-category': (App) => App.addCategory(),
   'rename-category': (App, el) => App.renameCategory(el.dataset.id),
   'delete-category': (App, el) => App.deleteCategory(el.dataset.id),
   'show-detail': (App, el) => App.showDetail(Number(el.dataset.id)),
@@ -17,6 +18,26 @@ const clickActions = {
   'scroll-heading': (App, el) => {
     document.getElementById(`note-heading-${el.dataset.index}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   },
+  // —— index.html 静态控件（原内联 onclick）——
+  'open-notebook-sheet': (App) => App.openNotebookSheet(),
+  'close-notebook-sheet': (App) => App.closeNotebookSheet(),
+  'open-filter-sheet': (App) => App.openFilterSheet(),
+  'close-filter-sheet': (App) => App.closeFilterSheet(),
+  'close-mobile-sheets': (App) => App.closeMobileSheets(),
+  'open-password-modal': (App) => App.openPasswordModal(),
+  'close-password-modal': (App) => App.closePasswordModal(),
+  'change-password': (App) => App.changePassword(),
+  'open-shortcut-modal': (App) => App.openShortcutModal(),
+  'close-shortcut-modal': (App) => App.closeShortcutModal(),
+  'close-note-modal': (App) => App.closeModal(),
+  'save-note': (App) => App.saveNote(),
+  'delete-editing-note': (App) => App.deleteNote(),
+  'upload-image': (App) => App.uploadImage(),
+  'markdown-format': (App, el) => App.applyMarkdownFormat(el.dataset.format),
+  'editor-mode': (App, el) => App.setEditorMode(el.dataset.editorMode),
+  'logout': (App) => App.logout(),
+  'submit-login': (App) => App.submitLogin(),
+  'enter-viewer-mode': (App) => App.enterViewerMode(),
 };
 
 export function installDelegation(App) {
@@ -49,5 +70,25 @@ export function installDelegation(App) {
     if (!el || App.role !== 'editor') return;
     e.preventDefault();
     App.deleteMenu(el.dataset.id); // docs 菜单由 deleteMenu 内部拦截
+  });
+
+  // —— 输入类事件（原 index.html 内联 oninput/onkeydown/onchange 等）——
+  const bind = (id, type, handler) => document.getElementById(id)?.addEventListener(type, handler);
+
+  bind('searchInput', 'input', () => App.filter());
+  bind('noteTitle', 'input', () => App.scheduleAutosave());
+  bind('noteCategory', 'change', () => App.scheduleAutosave());
+  bind('noteTags', 'input', () => App.scheduleAutosave());
+  bind('imageInput', 'change', (e) => App.handleImageSelected(e));
+  bind('noteContent', 'input', () => App.updateMarkdownPreview());
+  bind('noteContent', 'keydown', (e) => App.handleEditorKeydown(e));
+  bind('noteContent', 'paste', (e) => App.handleEditorPaste(e));
+  bind('noteContent', 'drop', (e) => App.handleEditorDrop(e));
+  bind('noteContent', 'dragover', (e) => e.preventDefault());
+  bind('confirmPasswordKey', 'keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); App.changePassword(); }
+  });
+  bind('loginKey', 'keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); App.submitLogin(); }
   });
 }
