@@ -68,12 +68,19 @@ if ($SshKey) {
   $sshArgs += @("-i", $SshKey)
 }
 
+$localStreamPath = Join-Path $repoRoot "deploy\nginx\veldr-stream.conf"
+$remoteStreamPath = "/etc/nginx/stream-conf.d/veldr-sni.conf"
+
 foreach ($server in $Servers) {
   $target = Get-Target $server
   $remoteTmpPath = "/tmp/veldr-frontends.conf"
+  $remoteTmpStream = "/tmp/veldr-stream.conf"
 
-  Invoke-Checked "Uploading nginx config to $target" {
+  Invoke-Checked "Uploading nginx configs to $target" {
     & scp @sshArgs $localConfigPath "${target}:${remoteTmpPath}"
+    if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $localStreamPath)) {
+      & scp @sshArgs $localStreamPath "${target}:${remoteTmpStream}"
+    }
   }
 
   $remoteCommand = @(
@@ -82,6 +89,7 @@ foreach ($server in $Servers) {
     "mkdir -p $(Quote-Sh (Get-PosixParent $RemoteConfigPath))",
     "if [ -f $(Quote-Sh $RemoteConfigPath) ]; then cp $(Quote-Sh $RemoteConfigPath) $(Quote-Sh "$RemoteConfigPath.bak-`$(date +%Y%m%d-%H%M%S)"); fi",
     "mv $(Quote-Sh $remoteTmpPath) $(Quote-Sh $RemoteConfigPath)",
+    "if [ -f $(Quote-Sh $remoteTmpStream) ]; then mkdir -p $(Quote-Sh (Get-PosixParent $remoteStreamPath)); mv $(Quote-Sh $remoteTmpStream) $(Quote-Sh $remoteStreamPath); fi",
     "nginx -t",
     "systemctl reload nginx"
   ) -join " && "

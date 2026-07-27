@@ -54,16 +54,31 @@ powershell -ExecutionPolicy Bypass -File .\scripts\deploy-frontends.ps1 -Deploy 
 
 ## Nginx
 
-Install the nginx config on the server:
+Deploy both nginx configs (site + SNI stream router) with:
 
-```bash
-sudo cp veldr-frontends.conf /etc/nginx/conf.d/veldr-frontends.conf
-sudo nginx -t
-sudo systemctl reload nginx
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy-nginx.ps1 -SshKey "C:\Users\indep\.ssh\id_ed25519"
 ```
 
-The nginx example is in:
+Config files:
 
 ```text
-deploy/nginx/veldr-frontends.conf
+deploy/nginx/veldr-frontends.conf  -> /etc/nginx/conf.d/veldr-frontends.conf
+deploy/nginx/veldr-stream.conf     -> /etc/nginx/stream-conf.d/veldr-sni.conf
 ```
+
+## HTTPS / port 443 architecture
+
+Port 443 is shared with the sing-box proxy via nginx stream SNI routing:
+
+```text
+:443 (nginx stream, ssl_preread)
+  ├─ SNI notes.lifetip.top / cms.lifetip.top -> 127.0.0.1:8501 (nginx https, Let's Encrypt)
+  └─ any other SNI (ws.lifetip.top proxy)    -> 127.0.0.1:8500 (sing-box vless-ws-tls-in)
+```
+
+- The stream include lives at the bottom of `/etc/nginx/nginx.conf` (`stream { include /etc/nginx/stream-conf.d/*.conf; }`), module `libnginx-mod-stream`.
+- sing-box's former `:443` inbound was moved to `127.0.0.1:8500` (backup at `/etc/sing-box/config.json.bak-before-sni`); proxy clients still connect to `ws.lifetip.top:443` unchanged.
+- Certificates: one cert covers notes+cms (`/etc/letsencrypt/live/notes.lifetip.top/`), issued by `scripts/setup-https.ps1`. Renewal is automatic via `certbot.timer` (HTTP-01 on port 80); `certbot renew --dry-run` verified.
+- Because HTTPS is live, the backend env sets `AUTH_COOKIE_SECURE=true`.
+- Note: the http layer sees client IP 127.0.0.1 (stream hop); per-IP rate limiting is therefore global.
