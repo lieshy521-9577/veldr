@@ -170,6 +170,8 @@ Passwords are stored as bcrypt hashes. The backend sets an HttpOnly JWT cookie a
 
 The CMS editor password is the same six-digit password used by the Veldr admin flow. CMS does not keep a separate editor secret. A successful `POST /api/cms/auth` also issues the same HttpOnly cookie session, so the CMS frontend no longer stores the plain key in localStorage; `POST /api/cms/logout` clears the session.
 
+CMS notes tagged `private` (case-insensitive) are only visible in editor mode: the backend filters them out of `GET /api/cms/notes` and returns 404 from `GET /api/cms/notes/:id` for viewer-role requests.
+
 ## Data And Cleanup
 
 Runtime files are intentionally ignored by Git:

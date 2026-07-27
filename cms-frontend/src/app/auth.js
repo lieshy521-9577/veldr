@@ -80,10 +80,8 @@ export const authMethods = {
     this.hideLogin();
     this.applyRoleUI();
     this.renderMenus();
-    this.renderCategories();
-    this.renderTags();
-    this.updateCounts();
-    this.renderNotes();
+    // 以 viewer 身份重新拉取数据：private 标签的笔记由服务端过滤，不能留在内存里
+    this.enterApp();
   },
 
   async logout() {

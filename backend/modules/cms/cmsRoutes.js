@@ -55,6 +55,10 @@ const normalizeNoteMeta = (note) => ({
   updatedAt: note.updatedAt || (note.date ? `${note.date}T00:00:00.000Z` : nowIso()),
 });
 
+// 带 private 标签的笔记仅编辑角色可见（大小写不敏感）
+const isPrivateNote = (note) => (Array.isArray(note.tags) ? note.tags : [])
+  .some(tag => String(tag).trim().toLowerCase() === 'private');
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -109,6 +113,7 @@ router.put('/password', editor, asyncHandler(async (req, res) => {
 router.get('/notes', viewer, asyncHandler(async (req, res) => {
   const db = await loadDB();
   let notes = db.notes.map(note => ({ ...note, ...normalizeNoteMeta(note) }));
+  if (req.cmsRole !== 'editor') notes = notes.filter(note => !isPrivateNote(note));
   const { category, tag, search, star, notebookId } = req.query;
 
   if (notebookId) notes = notes.filter(note => note.notebookId === notebookId);
@@ -131,7 +136,10 @@ router.get('/notes', viewer, asyncHandler(async (req, res) => {
 router.get('/notes/:id', viewer, asyncHandler(async (req, res) => {
   const db = await loadDB();
   const note = db.notes.find(item => item.id === Number(req.params.id));
-  if (!note) return send(res, 404, { error: 'Note not found' });
+  // private 笔记对非编辑角色返回 404，不泄露其存在
+  if (!note || (req.cmsRole !== 'editor' && isPrivateNote(note))) {
+    return send(res, 404, { error: 'Note not found' });
+  }
   return send(res, 200, { ...note, ...normalizeNoteMeta(note) });
 }));
 

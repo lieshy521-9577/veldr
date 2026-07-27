@@ -251,6 +251,53 @@ describe('unified CMS module', () => {
       .expect(200);
   });
 
+  it('hides private-tagged notes from viewers but shows them to editors', async () => {
+    resetDBForTests({
+      notes: [
+        {
+          id: 1, title: 'Public note', category: 'work', notebookId: null,
+          tags: ['cms'], content: 'public', excerpt: 'public', starred: false,
+          date: '2026-07-23', readTime: '1 min', version: 1,
+          createdAt: '2026-07-23T00:00:00.000Z', updatedAt: '2026-07-23T00:00:00.000Z',
+        },
+        {
+          id: 2, title: 'Secret note', category: 'work', notebookId: null,
+          tags: ['Private', 'cms'], content: 'secret', excerpt: 'secret', starred: false,
+          date: '2026-07-23', readTime: '1 min', version: 1,
+          createdAt: '2026-07-23T00:00:00.000Z', updatedAt: '2026-07-23T00:00:00.000Z',
+        },
+      ],
+      menus: [{ id: 'docs', label: 'Docs', type: 'docs' }],
+      categories: [{ id: 'work', label: '工作' }],
+    });
+
+    // 匿名 viewer：列表不含 private，单篇 404
+    await request(app)
+      .get('/api/cms/notes')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toHaveLength(1);
+        expect(body[0].id).toBe(1);
+      });
+
+    await request(app)
+      .get('/api/cms/notes/2')
+      .expect(404);
+
+    // 编辑角色：全部可见
+    await request(app)
+      .get('/api/cms/notes')
+      .set('X-Access-Key', editorKey)
+      .expect(200)
+      .expect(({ body }) => expect(body).toHaveLength(2));
+
+    await request(app)
+      .get('/api/cms/notes/2')
+      .set('X-Access-Key', editorKey)
+      .expect(200)
+      .expect(({ body }) => expect(body.title).toBe('Secret note'));
+  });
+
   it('issues an HttpOnly cookie session on CMS auth and clears it on logout', async () => {
     const agent = request.agent(app);
 
