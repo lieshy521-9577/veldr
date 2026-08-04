@@ -298,24 +298,26 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .modal__body{padding:var(--s6)}
 .modal__field{margin-bottom:var(--s5)}
 .modal__label{display:block;font-size:.875rem;font-weight:500;color:var(--c700);margin-bottom:var(--s2)}
-.modal__input,.modal__select,.modal__textarea{
+.modal__input,.modal__select{
   width:100%;padding:var(--s3);font-size:.9375rem;font-family:var(--font-sans);
   border:1px solid var(--c200);border-radius:8px;outline:none;
   transition:all .15s var(--ease);background:#fff;color:var(--c800);
 }
-.modal__input:focus,.modal__select:focus,.modal__textarea:focus{
+.modal__input:focus,.modal__select:focus{
   border-color:var(--a500);box-shadow:0 0 0 3px rgb(34 197 94/.1);
 }
-.modal__textarea{min-height:200px;resize:vertical;font-size:.9375rem;line-height:1.7;font-family:var(--font-sans)}
-.markdown-editor{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
-.markdown-preview{min-height:200px;max-height:420px;overflow:auto;padding:var(--s3);border:1px solid var(--c200);border-radius:8px;background:var(--c50);line-height:1.7;color:var(--c800)}
+.markdown-editor{display:block}
+.markdown-editor-host{min-width:0}
+.markdown-source{display:none}
+.markdown-preview{display:none;min-height:500px;max-height:500px;overflow:auto;padding:var(--s4);border:1px solid var(--c200);border-radius:8px;background:var(--c50);line-height:1.7;color:var(--c800)}
 .markdown-preview:empty::before{content:'实时预览会显示在这里';color:var(--c400)}
 .markdown-preview h1,.markdown-preview h2,.markdown-preview h3,.markdown-preview h4{margin:0 0 var(--s3)}
 .markdown-preview p,.markdown-preview ul,.markdown-preview pre{margin:0 0 var(--s3)}
 .markdown-preview pre{padding:var(--s3);overflow:auto;border-radius:6px;background:var(--c900);color:#f8fafc}
 .markdown-preview img{max-width:100%;height:auto;border-radius:6px}
-@media(max-width:768px){.markdown-editor{grid-template-columns:1fr}.markdown-preview{max-height:260px}}
+@media(max-width:768px){.markdown-preview{min-height:360px;max-height:420px}}
 .modal__toolbar{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap}
+.modal__toolbar>.modal__tool-btn{display:none}
 .modal__tool-btn{
   display:inline-flex;align-items:center;gap:var(--s2);
   padding:var(--s2) var(--s4);font-size:.8125rem;font-weight:500;font-family:var(--font-sans);
@@ -327,14 +329,8 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .modal__view-toggle{margin-left:auto;display:inline-flex;padding:3px;border:1px solid var(--c200);border-radius:9px;background:var(--c100);flex-shrink:0}
 .modal__view-btn{border:0;background:transparent;border-radius:7px;padding:6px 10px;font-size:.78rem;font-weight:600;color:var(--c500);cursor:pointer;font-family:var(--font-sans)}
 .modal__view-btn--active{background:#fff;color:var(--a700);box-shadow:var(--shadow-sm)}
-.markdown-source{min-width:0}
-.modal__textarea{min-height:420px;font-family:var(--font-mono)}
-.markdown-editor{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-.markdown-editor--write{grid-template-columns:1fr}
-.markdown-editor--write .markdown-preview{display:none}
-.markdown-editor--preview{grid-template-columns:1fr}
-.markdown-editor--preview .markdown-source{display:none}
-.markdown-preview{min-height:420px;max-height:560px;padding:var(--s4);line-height:1.75}
+.markdown-editor--preview .markdown-editor-host{display:none}
+.markdown-editor--preview .markdown-preview{display:block}
 .markdown-preview h1,.markdown-preview h2,.markdown-preview h3,.markdown-preview h4{color:var(--c900);line-height:1.25}
 .markdown-preview h1{font-size:1.75rem}.markdown-preview h2{font-size:1.35rem}.markdown-preview h3{font-size:1.1rem}
 .markdown-preview p,.markdown-preview ul,.markdown-preview ol,.markdown-preview pre,.markdown-preview blockquote,.markdown-preview table{margin:0 0 var(--s3)}
@@ -348,6 +344,15 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .markdown-preview input[type="checkbox"]{accent-color:var(--a600)}
 .markdown-preview a{color:var(--a700);text-decoration:none}
 .markdown-preview a:hover{text-decoration:underline}
+.toastui-editor-defaultUI{border:1px solid var(--c200)!important;border-radius:8px;overflow:hidden;background:#fff}
+.toastui-editor-toolbar{border-bottom-color:var(--c200)!important;background:var(--c50)!important}
+.toastui-editor-toolbar-divider{background-color:var(--c200)!important}
+.toastui-editor-main{font-family:var(--font-sans)}
+.toastui-editor-md-container,.toastui-editor-ww-container{background:#fff}
+.toastui-editor-md-preview{background:var(--c50)}
+.toastui-editor-contents{font-family:var(--font-sans);font-size:.95rem;line-height:1.75;color:var(--c800)}
+.toastui-editor-md-container .cm-scroller{font-family:var(--font-mono)}
+.toastui-editor-contents pre{border-radius:6px}
 .markdown-status{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s3);font-size:.8125rem;color:var(--c400)}
 .markdown-status span{padding:2px 8px;border-radius:999px;background:var(--c100)}
 .shortcut-grid{display:grid;gap:10px}
@@ -469,11 +474,9 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
   .modal__body{padding:var(--s4)}
   .modal__toolbar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
   .modal__view-toggle{margin-left:0}
-  .markdown-editor{grid-template-columns:1fr}
-  .markdown-editor--split .markdown-preview{display:none}
-  .markdown-editor--preview .markdown-preview{display:block}
-  .markdown-editor--preview .markdown-source{display:none}
-  .modal__textarea,.markdown-preview{min-height:360px;max-height:420px}
+  .markdown-editor--split .toastui-editor-md-preview{display:none}
+  .markdown-editor--split .toastui-editor-main{grid-template-columns:1fr!important}
+  .markdown-preview{min-height:360px;max-height:420px}
   .markdown-status{gap:var(--s2)}
   .page-view{max-width:100%}
 }
@@ -697,6 +700,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
           <input type="file" id="imageInput" accept="image/*" style="display:none">
         </div>
         <div class="markdown-editor markdown-editor--split" id="markdownEditor">
+          <div class="markdown-editor-host" id="noteContentHost"></div>
           <div class="markdown-source">
             <textarea class="modal__textarea" id="noteContent" placeholder="在此编写笔记内容...&#10;&#10;支持 Markdown 格式：&#10;# 一级标题&#10;## 二级标题&#10;**粗体** *斜体*&#10;- 列表项&#10;```代码块```"></textarea>
           </div>

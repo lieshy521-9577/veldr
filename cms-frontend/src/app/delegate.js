@@ -80,11 +80,6 @@ export function installDelegation(App) {
   bind('noteCategory', 'change', () => App.scheduleAutosave());
   bind('noteTags', 'input', () => App.scheduleAutosave());
   bind('imageInput', 'change', (e) => App.handleImageSelected(e));
-  bind('noteContent', 'input', () => App.updateMarkdownPreview());
-  bind('noteContent', 'keydown', (e) => App.handleEditorKeydown(e));
-  bind('noteContent', 'paste', (e) => App.handleEditorPaste(e));
-  bind('noteContent', 'drop', (e) => App.handleEditorDrop(e));
-  bind('noteContent', 'dragover', (e) => e.preventDefault());
   bind('confirmPasswordKey', 'keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); App.changePassword(); }
   });

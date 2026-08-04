@@ -21,6 +21,7 @@ export const App = {
   _lastServerRefreshAt: 0,
   lastKnownNotesVersion: '',
   currentEditorMode: 'split',
+  richEditor: null,
   currentNav: 'docs',
   accessKey: null,
   role: null,            // 'viewer' | 'editor' | null
