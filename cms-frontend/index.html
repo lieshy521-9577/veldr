@@ -402,6 +402,10 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 
 /* ===== Loading ===== */
 .loading-bar{position:fixed;top:0;left:0;height:2px;background:var(--a500);z-index:500;transition:width .2s var(--ease);box-shadow:0 0 8px var(--a500)}
+.upload-status{display:none;align-items:center;gap:8px;min-height:34px;margin-bottom:var(--s3);padding:7px 10px;border:1px solid var(--a200);border-radius:7px;background:var(--a50);color:var(--a800);font-size:.8125rem;font-weight:600}
+.upload-status--active{display:flex}
+.upload-status__spinner{width:15px;height:15px;border:2px solid var(--a200);border-top-color:var(--a600);border-radius:50%;animation:upload-spin .7s linear infinite;flex:0 0 auto}
+@keyframes upload-spin{to{transform:rotate(360deg)}}
 
 /* ===== Login ===== */
 .login-overlay{position:fixed;inset:0;background:rgba(28,25,23,.55);backdrop-filter:blur(6px);z-index:400;display:none;align-items:center;justify-content:center}
@@ -687,7 +691,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
           <button type="button" class="modal__tool-btn modal__tool-btn--icon" data-action="markdown-format" data-format="codeBlock" title="代码块 Ctrl+Shift+C">{ }</button>
           <button type="button" class="modal__tool-btn modal__tool-btn--icon" data-action="markdown-format" data-format="table" title="表格">表</button>
           <button type="button" class="modal__tool-btn modal__tool-btn--icon" data-action="markdown-format" data-format="link" title="链接 Ctrl+K">🔗</button>
-          <button type="button" class="modal__tool-btn" data-action="upload-image" title="上传并插入图片（单张 ≤ 5MB）">
+          <button type="button" class="modal__tool-btn" data-action="upload-image" title="上传并插入图片（单张 ≤ 20MB）">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             插入图片
           </button>
@@ -698,6 +702,10 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
             <button type="button" class="modal__view-btn" data-editor-mode="preview" data-action="editor-mode">预览</button>
           </div>
           <input type="file" id="imageInput" accept="image/*" style="display:none">
+        </div>
+        <div class="upload-status" id="imageUploadStatus" role="status" aria-live="polite">
+          <span class="upload-status__spinner" aria-hidden="true"></span>
+          <span id="imageUploadLabel"></span>
         </div>
         <div class="markdown-editor markdown-editor--split" id="markdownEditor">
           <div class="markdown-editor-host" id="noteContentHost"></div>

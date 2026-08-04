@@ -3,9 +3,23 @@ import '@toast-ui/editor/dist/toastui-editor.css';
 import { apiPath } from '../config.js';
 
 const EDITOR_HEIGHT = '500px';
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_IMAGE_LABEL = '20 MB';
+const ALLOWED_IMAGE_TYPES = /^image\/(png|jpe?g|gif|webp|svg\+xml|avif|bmp)$/i;
 
 function imageAltText(name) {
   return String(name || 'image').replace(/[\[\]\n\r]/g, ' ').trim() || 'image';
+}
+
+function getUploadErrorMessage(response, data) {
+  if (response.status === 413 || data?.code === 'FILE_TOO_LARGE') {
+    return `图片超过 ${MAX_IMAGE_LABEL}，无法上传`;
+  }
+  if (response.status === 401 || response.status === 403) {
+    return '编辑登录已失效，请重新输入编辑密码';
+  }
+  if (response.status === 415) return '不支持的图片格式';
+  return data?.error || data?.message || `图片上传失败（HTTP ${response.status}）`;
 }
 
 export const editorMethods = {
@@ -473,6 +487,28 @@ export const editorMethods = {
     document.getElementById('imageInput').click();
   },
 
+  validateImageFile(file) {
+    if (!file || !ALLOWED_IMAGE_TYPES.test(String(file.type || ''))) {
+      this.toast('请选择 PNG、JPG、GIF、WebP、SVG、AVIF 或 BMP 图片');
+      return false;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      this.toast(`图片超过 ${MAX_IMAGE_LABEL}，无法上传`);
+      return false;
+    }
+    return true;
+  },
+
+  setImageUploadState(active, fileName = '') {
+    const status = document.getElementById('imageUploadStatus');
+    const label = document.getElementById('imageUploadLabel');
+    const imageButtons = document.querySelectorAll('#noteContentHost .toastui-editor-toolbar button');
+    this.imageUploadInFlight = active;
+    if (status) status.classList.toggle('upload-status--active', active);
+    if (label) label.textContent = active ? `正在上传图片：${imageAltText(fileName)}` : '';
+    imageButtons.forEach((button) => { button.disabled = active; });
+  },
+
   async handleImageSelected(event) {
     if (this.role !== 'editor') {
       this.toast('需要编辑密码');
@@ -486,17 +522,25 @@ export const editorMethods = {
   },
 
   async uploadImageFile(file, options = {}) {
+    if (this.imageUploadInFlight) {
+      this.toast('图片正在上传，请稍候');
+      throw new Error('图片正在上传');
+    }
+    if (!this.validateImageFile(file)) throw new Error('图片校验失败');
+
     const formData = new FormData();
     formData.append('image', file);
     this.showLoading(true);
+    this.setImageUploadState(true, file.name);
     try {
       const response = await fetch(apiPath('/upload'), {
         method: 'POST', credentials: 'include',
         headers: this.accessKey ? { 'X-Access-Key': this.accessKey } : {},
         body: formData,
       });
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.url) throw new Error(data?.error || '图片上传失败');
+      const contentType = response.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await response.json().catch(() => null) : null;
+      if (!response.ok || !data?.url) throw new Error(getUploadErrorMessage(response, data));
       if (options.insert !== false) {
         this.insertMarkdownImage(file.name || data.name || 'image', data.url);
         this.toast('图片已插入');
@@ -506,6 +550,7 @@ export const editorMethods = {
       this.toast(error.message);
       throw error;
     } finally {
+      this.setImageUploadState(false);
       this.showLoading(false);
     }
   },

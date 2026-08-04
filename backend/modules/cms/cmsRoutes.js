@@ -71,7 +71,7 @@ const upload = multer({
       cb(null, base + (ext || '.img'));
     },
   }),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (allowedImages.test(file.mimetype)) cb(null, true);
     else cb(new Error('Only image files are allowed'));
@@ -334,6 +334,9 @@ router.delete('/menus/:id', editor, asyncHandler(async (req, res) => {
 
 router.post('/upload', editor, (req, res) => {
   upload.single('image')(req, res, (error) => {
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+      return send(res, 400, { code: 'FILE_TOO_LARGE', error: '图片超过 20 MB，无法上传' });
+    }
     if (error) return send(res, 400, { error: error.message || 'Upload failed' });
     if (!req.file) return send(res, 400, { error: 'No file selected' });
     return send(res, 201, {

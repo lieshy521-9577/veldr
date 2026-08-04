@@ -184,6 +184,20 @@ describe('unified CMS module', () => {
       .expect(({ body }) => expect(body.category).toBe('work'));
   });
 
+  it('returns a clear error when a CMS image exceeds the 20 MB upload limit', async () => {
+    const oversizedImage = Buffer.alloc(20 * 1024 * 1024 + 1, 0);
+
+    await request(app)
+      .post('/api/cms/upload')
+      .set('X-Access-Key', editorKey)
+      .attach('image', oversizedImage, { filename: 'too-large.png', contentType: 'image/png' })
+      .expect(400)
+      .expect(({ body }) => {
+        expect(body.code).toBe('FILE_TOO_LARGE');
+        expect(body.error).toContain('20 MB');
+      });
+  });
+
   it('rejects stale note updates with a version conflict', async () => {
     await request(app)
       .put('/api/cms/notes/1')

@@ -22,6 +22,7 @@ export const App = {
   lastKnownNotesVersion: '',
   currentEditorMode: 'split',
   richEditor: null,
+  imageUploadInFlight: false,
   currentNav: 'docs',
   accessKey: null,
   role: null,            // 'viewer' | 'editor' | null
