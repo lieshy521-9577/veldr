@@ -57,11 +57,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\deploy-frontends.ps1 -Deploy 
 
 ## Nginx
 
-Deploy both nginx configs (site + SNI stream router) with:
+Deploy the Veldr HTTP nginx config with:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\deploy-nginx.ps1 -SshKey "C:\Users\indep\.ssh\id_ed25519"
 ```
+
+The shared 443 SNI map also routes `nav`, `gotify`, `igotify`, and `ws`; it is not touched by normal Veldr releases. Only use `-ReplaceSharedStream` after updating the complete shared map in `deploy/nginx/veldr-stream.conf` and intentionally reviewing every mapped service.
 
 Config files:
 
