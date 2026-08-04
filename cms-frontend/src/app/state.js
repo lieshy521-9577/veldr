@@ -23,8 +23,9 @@ export const App = {
   currentEditorMode: 'split',
   richEditor: null,
   imageUploadInFlight: false,
+  pendingImageGrid: [],
   currentNav: 'docs',
-  accessKey: null,
+  adminUsername: '',
   role: null,            // 'viewer' | 'editor' | null
   _applyingRoute: false,
   _suppressHashHandler: false,

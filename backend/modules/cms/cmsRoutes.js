@@ -2,11 +2,10 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import rateLimit from 'express-rate-limit';
-import { attachAuthState, clearAuthCookie } from '../../middleware/auth.js';
+import { attachAuthState } from '../../middleware/auth.js';
 import { asyncHandler } from '../../middleware/errorHandler.js';
 import { loadDB, persistDB, nextId, normalizeTags, uploadDir } from './cmsStore.js';
-import { authenticateCms, setSharedEditorPassword, verifyEditorPassword, requireEditor, requireViewer } from './cmsAuth.js';
+import { requireEditor, requireViewer } from './cmsAuth.js';
 
 const router = express.Router();
 
@@ -16,15 +15,6 @@ const send = (res, status, data) => res.status(status).json(data);
 // instead of becoming unhandled rejections (which kill the process in server.js)
 const viewer = asyncHandler(requireViewer);
 const editor = asyncHandler(requireEditor);
-
-const cmsAuthLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
-  skipSuccessfulRequests: true,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many attempts. Please try again later.' },
-});
 
 const allowedImages = /^image\/(png|jpe?g|gif|webp|svg\+xml|avif|bmp)$/i;
 const nowIso = () => new Date().toISOString();
@@ -80,35 +70,9 @@ const upload = multer({
 
 router.use(attachAuthState);
 
-router.post('/auth', cmsAuthLimiter, asyncHandler(authenticateCms));
-
-router.post('/logout', (req, res) => {
-  clearAuthCookie(res);
-  send(res, 200, { ok: true });
-});
-
 router.get('/me', viewer, (req, res) => {
   send(res, 200, { role: req.cmsRole });
 });
-
-router.put('/password', editor, asyncHandler(async (req, res) => {
-  const currentKey = String(req.body?.currentKey || '').trim();
-  const nextKey = String(req.body?.newKey || '').trim();
-
-  if (!await verifyEditorPassword(currentKey)) {
-    return send(res, 401, { error: 'Current editor password is incorrect' });
-  }
-  if (!/^\d{6}$/.test(nextKey)) {
-    return send(res, 400, { error: 'New editor password must be 6 digits' });
-  }
-  if (currentKey === nextKey) {
-    return send(res, 400, { error: 'New editor password must be different' });
-  }
-
-  await setSharedEditorPassword(nextKey);
-  clearAuthCookie(res);
-  return send(res, 200, { ok: true });
-}));
 
 router.get('/notes', viewer, asyncHandler(async (req, res) => {
   const db = await loadDB();

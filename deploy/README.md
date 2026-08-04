@@ -22,8 +22,11 @@ Edit `backend\.env.prod` and set strong production values, especially:
 
 ```text
 JWT_SECRET
+ADMIN_USERNAME
 DEFAULT_PASSWORD
 ```
+
+`DEFAULT_PASSWORD` may be the existing six-digit password during migration, but the first password change must use 8-128 characters. Set `JWT_EXPIRES_IN=60d` and `AUTH_COOKIE_MAX_AGE_MS=5184000000` for the long-lived administrator session.
 
 Deploy backend:
 

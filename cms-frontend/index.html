@@ -307,8 +307,25 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
   border-color:var(--a500);box-shadow:0 0 0 3px rgb(34 197 94/.1);
 }
 .markdown-editor{display:block}
-.markdown-editor-host{min-width:0}
-.markdown-source{display:none}
+.markdown-editor-host{min-width:0;min-height:500px;border:1px solid var(--c200);border-radius:8px;background:#fff;overflow:auto}
+.markdown-editor-host .tiptap{min-height:460px;padding:var(--s5);outline:0;font-family:var(--font-sans);font-size:.98rem;line-height:1.75;color:var(--c800)}
+.markdown-editor-host .tiptap p.is-editor-empty:first-child::before{content:attr(data-placeholder);float:left;height:0;color:var(--c400);pointer-events:none}
+.markdown-editor-host .tiptap img{display:block;max-width:100%;height:auto;margin:var(--s4) 0;border-radius:8px;box-shadow:var(--shadow-sm)}
+.markdown-editor-host .tiptap img[data-width-percent="25"]{width:25%!important}.markdown-editor-host .tiptap img[data-width-percent="33"]{width:33.333%!important}.markdown-editor-host .tiptap img[data-width-percent="50"]{width:50%!important}.markdown-editor-host .tiptap img[data-width-percent="66"]{width:66.667%!important}.markdown-editor-host .tiptap img[data-width-percent="75"]{width:75%!important}.markdown-editor-host .tiptap img[data-width-percent="100"]{width:100%!important}
+.markdown-editor-host .tiptap [data-resize-container]{display:inline-flex!important;width:fit-content!important;max-width:100%;margin:var(--s4) 0;outline:2px solid transparent;transition:outline-color .15s var(--ease)}
+.markdown-editor-host .tiptap .tiptap-image-gallery [data-resize-container]{display:flex!important;width:100%!important;margin:0}
+.markdown-editor-host .tiptap [data-resize-container]:has(img[data-width-percent="25"]){width:25%!important}.markdown-editor-host .tiptap [data-resize-container]:has(img[data-width-percent="33"]){width:33.333%!important}.markdown-editor-host .tiptap [data-resize-container]:has(img[data-width-percent="50"]){width:50%!important}.markdown-editor-host .tiptap [data-resize-container]:has(img[data-width-percent="66"]){width:66.667%!important}.markdown-editor-host .tiptap [data-resize-container]:has(img[data-width-percent="75"]){width:75%!important}.markdown-editor-host .tiptap [data-resize-container]:has(img[data-width-percent="100"]){width:100%!important}
+.markdown-editor-host .tiptap [data-resize-container]:has(img[data-width-percent]) img{width:100%!important}
+.markdown-editor-host .tiptap [data-resize-container]:hover,.markdown-editor-host .tiptap .ProseMirror-selectednode{outline-color:var(--a400)}
+.markdown-editor-host .tiptap [data-resize-handle]{z-index:3;width:10px!important;height:10px!important;min-width:10px;min-height:10px;border:2px solid #fff;border-radius:50%;background:var(--a600);box-shadow:0 1px 3px rgb(15 23 42/.25);opacity:0;transition:opacity .15s var(--ease)}
+.markdown-editor-host .tiptap [data-resize-container]:hover [data-resize-handle],.markdown-editor-host .tiptap .ProseMirror-selectednode [data-resize-handle]{opacity:1}
+.markdown-editor-host .tiptap [data-resize-handle="left"],.markdown-editor-host .tiptap [data-resize-handle="right"]{top:50%!important;bottom:auto!important;transform:translateY(-50%)}
+.markdown-editor-host .tiptap [data-resize-handle="top-left"],.markdown-editor-host .tiptap [data-resize-handle="top-right"]{transform:translateY(-50%)}
+.markdown-editor-host .tiptap [data-resize-handle="bottom-left"],.markdown-editor-host .tiptap [data-resize-handle="bottom-right"]{transform:translateY(50%)}
+.markdown-editor-host .tiptap .tiptap-image-gallery{display:grid;grid-template-columns:repeat(var(--gallery-columns, 2), minmax(0,1fr));gap:var(--s3);margin:var(--s5) 0}
+.markdown-editor-host .tiptap .tiptap-image-gallery img{width:100%!important;margin:0;min-width:0}
+.markdown-editor-host .tiptap table{border-collapse:collapse;width:100%;margin:var(--s4) 0}.markdown-editor-host .tiptap th,.markdown-editor-host .tiptap td{border:1px solid var(--c200);padding:8px 10px;min-width:80px;vertical-align:top}.markdown-editor-host .tiptap th{background:var(--c100)}
+.markdown-source{display:none;min-height:500px}.markdown-source .modal__textarea{min-height:500px;height:500px;font-family:var(--font-mono);line-height:1.65;resize:vertical}
 .markdown-preview{display:none;min-height:500px;max-height:500px;overflow:auto;padding:var(--s4);border:1px solid var(--c200);border-radius:8px;background:var(--c50);line-height:1.7;color:var(--c800)}
 .markdown-preview:empty::before{content:'实时预览会显示在这里';color:var(--c400)}
 .markdown-preview h1,.markdown-preview h2,.markdown-preview h3,.markdown-preview h4{margin:0 0 var(--s3)}
@@ -317,7 +334,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .markdown-preview img{max-width:100%;height:auto;border-radius:6px}
 @media(max-width:768px){.markdown-preview{min-height:360px;max-height:420px}}
 .modal__toolbar{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s3);flex-wrap:wrap}
-.modal__toolbar>.modal__tool-btn{display:none}
+.modal__toolbar>.modal__tool-btn{display:inline-flex}
 .modal__tool-btn{
   display:inline-flex;align-items:center;gap:var(--s2);
   padding:var(--s2) var(--s4);font-size:.8125rem;font-weight:500;font-family:var(--font-sans);
@@ -326,11 +343,13 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 }
 .modal__tool-btn:hover{background:var(--c200);color:var(--c900);border-color:var(--c300)}
 .modal__tool-btn--icon{min-width:34px;padding:var(--s2);justify-content:center}
+.modal__image-layout{display:none}
 .modal__view-toggle{margin-left:auto;display:inline-flex;padding:3px;border:1px solid var(--c200);border-radius:9px;background:var(--c100);flex-shrink:0}
 .modal__view-btn{border:0;background:transparent;border-radius:7px;padding:6px 10px;font-size:.78rem;font-weight:600;color:var(--c500);cursor:pointer;font-family:var(--font-sans)}
 .modal__view-btn--active{background:#fff;color:var(--a700);box-shadow:var(--shadow-sm)}
-.markdown-editor--preview .markdown-editor-host{display:none}
-.markdown-editor--preview .markdown-preview{display:block}
+.markdown-editor--source{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--s4)}
+.markdown-editor--source .markdown-editor-host{display:none}
+.markdown-editor--source .markdown-source,.markdown-editor--source .markdown-preview{display:block}
 .markdown-preview h1,.markdown-preview h2,.markdown-preview h3,.markdown-preview h4{color:var(--c900);line-height:1.25}
 .markdown-preview h1{font-size:1.75rem}.markdown-preview h2{font-size:1.35rem}.markdown-preview h3{font-size:1.1rem}
 .markdown-preview p,.markdown-preview ul,.markdown-preview ol,.markdown-preview pre,.markdown-preview blockquote,.markdown-preview table{margin:0 0 var(--s3)}
@@ -344,15 +363,15 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
 .markdown-preview input[type="checkbox"]{accent-color:var(--a600)}
 .markdown-preview a{color:var(--a700);text-decoration:none}
 .markdown-preview a:hover{text-decoration:underline}
-.toastui-editor-defaultUI{border:1px solid var(--c200)!important;border-radius:8px;overflow:hidden;background:#fff}
-.toastui-editor-toolbar{border-bottom-color:var(--c200)!important;background:var(--c50)!important}
-.toastui-editor-toolbar-divider{background-color:var(--c200)!important}
-.toastui-editor-main{font-family:var(--font-sans)}
-.toastui-editor-md-container,.toastui-editor-ww-container{background:#fff}
-.toastui-editor-md-preview{background:var(--c50)}
-.toastui-editor-contents{font-family:var(--font-sans);font-size:.95rem;line-height:1.75;color:var(--c800)}
-.toastui-editor-md-container .cm-scroller{font-family:var(--font-mono)}
-.toastui-editor-contents pre{border-radius:6px}
+.detail__content .md-img,.page-view .md-img,.markdown-preview .md-img{width:min(100%,760px);height:auto;margin:var(--s6) 0;display:block;border-radius:11px;box-shadow:var(--shadow-sm)}
+.detail__content .md-img--w-25,.page-view .md-img--w-25,.markdown-preview .md-img--w-25{width:25%}
+.detail__content .md-img--w-33,.page-view .md-img--w-33,.markdown-preview .md-img--w-33{width:33.333%}
+.detail__content .md-img--w-50,.page-view .md-img--w-50,.markdown-preview .md-img--w-50{width:50%}
+.detail__content .md-img--w-66,.page-view .md-img--w-66,.markdown-preview .md-img--w-66{width:66.667%}
+.detail__content .md-img--w-75,.page-view .md-img--w-75,.markdown-preview .md-img--w-75{width:75%}
+.detail__content .md-img--w-100,.page-view .md-img--w-100,.markdown-preview .md-img--w-100{width:100%}
+.md-image-grid{display:grid;gap:var(--s4);width:min(100%,760px);margin:var(--s6) 0}.md-image-grid--2{grid-template-columns:repeat(2,minmax(0,1fr))}.md-image-grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}.md-image-grid .md-img{width:100%;height:auto;margin:0;display:block;border-radius:9px;box-shadow:var(--shadow-sm)}
+@media(max-width:768px){.detail__content .md-img,.page-view .md-img,.markdown-preview .md-img{width:100%}.md-image-grid--2,.md-image-grid--3,.markdown-editor--source{grid-template-columns:1fr}.markdown-editor-host .tiptap .tiptap-image-gallery{grid-template-columns:1fr}}
 .markdown-status{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s3);font-size:.8125rem;color:var(--c400)}
 .markdown-status span{padding:2px 8px;border-radius:999px;background:var(--c100)}
 .shortcut-grid{display:grid;gap:10px}
@@ -478,8 +497,7 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
   .modal__body{padding:var(--s4)}
   .modal__toolbar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
   .modal__view-toggle{margin-left:0}
-  .markdown-editor--split .toastui-editor-md-preview{display:none}
-  .markdown-editor--split .toastui-editor-main{grid-template-columns:1fr!important}
+  .markdown-editor-host{min-height:360px}.markdown-editor-host .tiptap{min-height:330px;padding:var(--s4)}
   .markdown-preview{min-height:360px;max-height:420px}
   .markdown-status{gap:var(--s2)}
   .page-view{max-width:100%}
@@ -691,17 +709,24 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
           <button type="button" class="modal__tool-btn modal__tool-btn--icon" data-action="markdown-format" data-format="codeBlock" title="代码块 Ctrl+Shift+C">{ }</button>
           <button type="button" class="modal__tool-btn modal__tool-btn--icon" data-action="markdown-format" data-format="table" title="表格">表</button>
           <button type="button" class="modal__tool-btn modal__tool-btn--icon" data-action="markdown-format" data-format="link" title="链接 Ctrl+K">🔗</button>
-          <button type="button" class="modal__tool-btn" data-action="upload-image" title="上传并插入图片（单张 ≤ 20MB）">
+          <select class="modal__image-layout" id="imageLayout" aria-label="图片布局">
+            <option value="default">常规图片</option>
+            <option value="50">半宽图片</option>
+            <option value="75">宽图片</option>
+            <option value="100">全宽图片</option>
+            <option value="grid-2">两列图片</option>
+          </select>
+          <button type="button" class="modal__tool-btn" data-action="upload-image" title="上传并插入图片（单张 ≤ 20MB；两列请选择两张）">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             插入图片
           </button>
+          <button type="button" class="modal__tool-btn" data-action="upload-gallery" title="选择两张或更多图片，自动插入响应式两列图库">图库</button>
           <button type="button" class="modal__tool-btn modal__tool-btn--icon" data-action="open-shortcut-modal" title="快捷键 Ctrl+/">?</button>
           <div class="modal__view-toggle" aria-label="编辑器视图">
-            <button type="button" class="modal__view-btn modal__view-btn--active" data-editor-mode="split" data-action="editor-mode">分屏</button>
-            <button type="button" class="modal__view-btn" data-editor-mode="write" data-action="editor-mode">只写</button>
-            <button type="button" class="modal__view-btn" data-editor-mode="preview" data-action="editor-mode">预览</button>
+            <button type="button" class="modal__view-btn modal__view-btn--active" data-editor-mode="write" data-action="editor-mode">编辑</button>
+            <button type="button" class="modal__view-btn" data-editor-mode="source" data-action="editor-mode">源码</button>
           </div>
-          <input type="file" id="imageInput" accept="image/*" style="display:none">
+          <input type="file" id="imageInput" accept="image/*" multiple style="display:none">
         </div>
         <div class="upload-status" id="imageUploadStatus" role="status" aria-live="polite">
           <span class="upload-status__spinner" aria-hidden="true"></span>
@@ -764,15 +789,15 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
     <div class="modal__body">
       <div class="modal__field">
         <label class="modal__label">当前密码</label>
-        <input class="modal__input" id="currentPasswordKey" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="输入当前 6 位密码">
+        <input class="modal__input" id="currentPasswordKey" type="password" autocomplete="current-password" placeholder="输入当前密码">
       </div>
       <div class="modal__field">
         <label class="modal__label">新密码</label>
-        <input class="modal__input" id="newPasswordKey" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="输入新的 6 位数字">
+        <input class="modal__input" id="newPasswordKey" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="输入 8 到 128 位新密码">
       </div>
       <div class="modal__field">
         <label class="modal__label">确认新密码</label>
-        <input class="modal__input" id="confirmPasswordKey" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="再次输入新密码">
+        <input class="modal__input" id="confirmPasswordKey" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="再次输入新密码">
       </div>
       <div class="modal__hint">修改后当前设备会自动切换到新密码，其它设备需要重新输入。</div>
     </div>
@@ -788,13 +813,16 @@ body{font-family:var(--font-sans);color:var(--c800);background:var(--c50);line-h
   <div class="login-card">
     <div class="login-card__logo">N</div>
     <h2 class="login-card__title">NoteFlow</h2>
-    <p class="login-card__desc">请输入编辑密码</p>
+    <p class="login-card__desc">使用管理员账号登录，登录状态保留 60 天</p>
     <div class="login-card__field">
-      <input type="password" class="login-card__input" id="loginKey" placeholder="输入编辑密码…" autocomplete="off">
+      <input type="text" class="login-card__input" id="loginUsername" placeholder="管理员账号" autocomplete="username">
+    </div>
+    <div class="login-card__field">
+      <input type="password" class="login-card__input" id="loginPassword" placeholder="管理员密码" autocomplete="current-password">
     </div>
     <button class="login-card__btn" data-action="submit-login">进入</button>
     <button class="login-card__btn login-card__btn--ghost" data-action="enter-viewer-mode">继续查看</button>
-    <p class="login-card__hint">无需密码即可浏览；编辑密码可新建、上传、修改和删除</p>
+    <p class="login-card__hint">无需登录即可浏览；管理员可新建、上传、修改和删除</p>
   </div>
 </div>
 

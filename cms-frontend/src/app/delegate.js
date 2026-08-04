@@ -33,6 +33,7 @@ const clickActions = {
   'save-note': (App) => App.saveNote(),
   'delete-editing-note': (App) => App.deleteNote(),
   'upload-image': (App) => App.uploadImage(),
+  'upload-gallery': (App) => App.uploadGallery(),
   'markdown-format': (App, el) => App.applyMarkdownFormat(el.dataset.format),
   'editor-mode': (App, el) => App.setEditorMode(el.dataset.editorMode),
   'logout': (App) => App.logout(),
@@ -80,10 +81,11 @@ export function installDelegation(App) {
   bind('noteCategory', 'change', () => App.scheduleAutosave());
   bind('noteTags', 'input', () => App.scheduleAutosave());
   bind('imageInput', 'change', (e) => App.handleImageSelected(e));
+  bind('noteContent', 'input', () => App.handleSourceInput());
   bind('confirmPasswordKey', 'keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); App.changePassword(); }
   });
-  bind('loginKey', 'keydown', (e) => {
+  ['loginUsername', 'loginPassword'].forEach((id) => bind(id, 'keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); App.submitLogin(); }
-  });
+  }));
 }
